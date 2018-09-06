@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citra App</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+
+  <!-- TODO add manifest here -->
+  
+</head>
+<body>
+
+  <nav class="blue darken-2" role="navigation">
+    <div class="nav-wrapper container" style="width:95%">
+      <a id="logo-container" href="#" class="brand-logo left">Citra</a>
+      <ul class="right">
+        <li><a id="butCamera"><i class="material-icons">camera_alt</i></a></li>
+        <li><a id="butGallery"><i class="material-icons">image</i></a></li>
+    </div>
+  </nav>
+
+  <input id="inputImageCamera" type="file" accept="image/*" capture hidden>
+  <input id="inputImageGallery" type="file" accept="image/*" hidden>
+
+  <div class="container" style="width:100%">
+    <div class="row">
+      <div class="col s6">
+        <div class="card">
+          <div class="card-image">
+            <img id="imgBefore" src="https://materializecss.com/images/sample-1.jpg">
+          </div>
+        </div>
+      </div>
+          
+      <div class="col s6">
+        <div class="card">
+          <div class="card-image">
+            <img id="imgAfter" src="https://materializecss.com/images/sample-1.jpg">
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col s12">
+      <form action="#">
+        <p class="range-field">
+          <b>Saturasi :</b>
+          <input type="range" id="test1" min="0" max="100" value="25"/>
+        </p>
+      </form>
+    </div>
+    <div class="col s12">
+        <form action="#">
+          <p class="range-field">
+            <b>Saturasi :</b>
+            <input type="range" id="test5" min="0" max="100" value="10"/>
+          </p>
+        </form>
+      </div>
+  </div>
+
+  <script type="text/javascript">
+
+    (function() {
+      
+        /*****************************************************************************
+         *
+         * Event listeners for UI elements
+         *
+         ****************************************************************************/
+
+        var inputImageCamera = document.getElementById("inputImageCamera");
+
+        inputImageCamera.addEventListener('change', function() {
+          if (inputImageCamera.files && inputImageCamera.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+              document.getElementById("imgBefore").src = e.target.result;
+            };
+            reader.readAsDataURL(inputImageCamera.files[0]);
+          }
+        });
+
+        document.getElementById("butCamera").addEventListener('click', function() {
+          document.getElementById("inputImageCamera").focus();
+          document.getElementById("inputImageCamera").click();
+        });
+
+        document.getElementById("butGallery").addEventListener('click', function() {
+          document.getElementById("inputImageGallery").focus();
+          document.getElementById("inputImageGallery").click();
+        });
+
+    }());
+
+  </script>
+  <!-- <script src="scripts/app.js" async></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+</body>
+</html>
