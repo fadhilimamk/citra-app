@@ -77,6 +77,9 @@
          ****************************************************************************/
 
         var inputImageCamera = document.getElementById("inputImageCamera");
+        var inputImageGallery = document.getElementById("inputImageGallery");
+        var butCamera = document.getElementById("butCamera");
+        var butGallery = document.getElementById("butGallery");
 
         inputImageCamera.addEventListener('change', function() {
           if (inputImageCamera.files && inputImageCamera.files[0]) {
@@ -88,14 +91,24 @@
           }
         });
 
-        document.getElementById("butCamera").addEventListener('click', function() {
-          document.getElementById("inputImageCamera").focus();
-          document.getElementById("inputImageCamera").click();
+        inputImageGallery.addEventListener('change', function() {
+          if (inputImageGallery.files && inputImageGallery.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+              document.getElementById("imgBefore").src = e.target.result;
+            };
+            reader.readAsDataURL(inputImageGallery.files[0]);
+          }
         });
 
-        document.getElementById("butGallery").addEventListener('click', function() {
-          document.getElementById("inputImageGallery").focus();
-          document.getElementById("inputImageGallery").click();
+        butCamera.addEventListener('click', function() {
+          inputImageCamera.focus();
+          inputImageCamera.click();
+        });
+
+        butGallery.addEventListener('click', function() {
+          inputImageGallery.focus();
+          inputImageGallery.click();
         });
 
     }());
