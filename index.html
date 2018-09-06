@@ -8,8 +8,16 @@
   <title>Citra App</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 
   <!-- TODO add manifest here -->
+
+  <style>
+    .ct-series-a .ct-bar {
+      stroke: grey;
+      stroke-width: 2px;
+    }
+  </style>
   
 </head>
 <body>
@@ -27,11 +35,11 @@
   <input id="inputImageGallery" type="file" accept="image/*" hidden>
 
   <div class="container" style="width:100%">
-    <div class="row">
+    <div class="row valign-wrapper">
       <div class="col s6">
         <div class="card">
           <div class="card-image">
-            <img id="imgBefore" src="https://materializecss.com/images/sample-1.jpg">
+            <img id="imgBefore" src="images/empty.png">
           </div>
         </div>
       </div>
@@ -39,13 +47,37 @@
       <div class="col s6">
         <div class="card">
           <div class="card-image">
-            <img id="imgAfter" src="https://materializecss.com/images/sample-1.jpg">
+            <img id="imgAfter" src="images/empty.png">
           </div>
         </div>
       </div>
       
     </div>
   </div>
+
+  <hr>
+
+  <span id="viewHistogram" hidden>
+    <div class="row">
+      <div class="col s6 center">
+        <small>Red</small>
+        <div id="histRed" class="ct-chart ct-perfect-fourth"></div>
+      </div>
+      <div class="col s6 center">
+        <small>Green</small>
+        <div id="histGreen" class="ct-chart ct-perfect-fourth"></div>
+      </div>
+      <div class="col s6 center">
+        <small>Blue</small>
+        <div id="histBlue" class="ct-chart ct-perfect-fourth"></div>
+      </div>
+      <div class="col s6 center">
+        <small>Grey</small>
+        <div id="histGrey" class="ct-chart ct-perfect-fourth"></div>
+      </div>
+    </div>
+    <hr>
+  </span>
 
   <div class="row">
     <div class="col s12">
@@ -66,9 +98,16 @@
       </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+  <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
   <script type="text/javascript">
 
     (function() {
+        'use strict';
+
+        var app = {
+          isLoading: true
+        };
       
         /*****************************************************************************
          *
@@ -88,6 +127,7 @@
               document.getElementById("imgBefore").src = e.target.result;
             };
             reader.readAsDataURL(inputImageCamera.files[0]);
+            app.showHistogram();
           }
         });
 
@@ -98,6 +138,7 @@
               document.getElementById("imgBefore").src = e.target.result;
             };
             reader.readAsDataURL(inputImageGallery.files[0]);
+            app.showHistogram();
           }
         });
 
@@ -111,11 +152,43 @@
           inputImageGallery.click();
         });
 
+
+      /*****************************************************************************
+       *
+       * Methods to update/refresh the UI
+       *
+       ****************************************************************************/
+        var viewHistogram = document.getElementById("viewHistogram");
+
+        app.showHistogram = function(image) {
+          viewHistogram.style.display = "block";
+
+          var data = {
+            labels: [...Array(256).keys()],
+            series: [
+              [...Array(256).keys()]
+            ]
+          };
+
+          var properties = {
+            axisX: {
+              showLabel: false
+            },
+            axisY: {
+              onlyInteger: true
+            }
+          };
+
+          new Chartist.Bar('#histRed', data, properties);
+          new Chartist.Bar('#histGreen', data, properties);
+          new Chartist.Bar('#histBlue', data, properties);
+          new Chartist.Bar('#histGrey', data, properties);
+        };
+
     }());
 
   </script>
   <!-- <script src="scripts/app.js" async></script> -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 
 </body>
 </html>
