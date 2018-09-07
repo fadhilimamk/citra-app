@@ -75,6 +75,9 @@
         <small>Grey</small>
         <div id="histGrey" class="ct-chart ct-perfect-fourth"></div>
       </div>
+      <div class="col s6 center">
+        <canvas id="canvasHistRed" width="150" height="100" style="color:red">Your browser does not have support for Canvas.</canvas>
+      </div>
     </div>
     <hr>
   </span>
@@ -106,8 +109,15 @@
         'use strict';
 
         var app = {
-          isLoading: true
+          isLoading: true,
+          image: null,
+          imageCanvas: null,
+          imageCtx: null,
+          imageData: null
         };
+        
+        app.imageCanvas = document.createElement('canvas');
+        app.imageCtx = app.imageCanvas.getContext('2d');
       
         /*****************************************************************************
          *
@@ -122,23 +132,13 @@
 
         inputImageCamera.addEventListener('change', function() {
           if (inputImageCamera.files && inputImageCamera.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-              document.getElementById("imgBefore").src = e.target.result;
-            };
-            reader.readAsDataURL(inputImageCamera.files[0]);
-            app.showHistogram();
+            app.showImage(inputImageCamera.files[0]);
           }
         });
 
         inputImageGallery.addEventListener('change', function() {
           if (inputImageGallery.files && inputImageGallery.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-              document.getElementById("imgBefore").src = e.target.result;
-            };
-            reader.readAsDataURL(inputImageGallery.files[0]);
-            app.showHistogram();
+            app.showImage(inputImageGallery.files[0]);
           }
         });
 
@@ -160,9 +160,74 @@
        ****************************************************************************/
         var viewHistogram = document.getElementById("viewHistogram");
 
+        // Display selected image to imgBefore, then start to process the histogram
+        app.showImage = function(image) {
+          app.image = document.getElementById("imgBefore");
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            app.image.src = e.target.result;
+          };
+          reader.readAsDataURL(image);
+          app.showHistogram();
+        };
+
+        // Calculate image RGB-Grey histogram, using canvas
+        app.calculateHistogram = function() {
+          var histCanvasRed = document.getElementById("canvasHistRed");
+          var histCtx = histCanvasRed.getContext('2d');
+
+          var gradients = {
+            'red':     histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'green':   histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'blue':    histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'hue':     histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'val':     histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'cyan':    histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'magenta': histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'yellow':  histCtx.createLinearGradient(0, 0, app.image.width, 0),
+            'kelvin':  histCtx.createLinearGradient(0, 0, app.image.width, 0)
+          },
+          colors = {
+            'red':   ['#000', '#f00'],
+            'green': ['#000', '#0f0'],
+            'blue':  ['#000', '#00f'],
+            'hue':   [
+              '#f00',   // 0, Red,       0°
+              '#ff0',   // 1, Yellow,   60°
+              '#0f0',   // 2, Green,   120°
+              '#0ff',   // 3, Cyan,    180°
+              '#00f',   // 4, Blue,    240°
+              '#f0f',   // 5, Magenta, 300°
+              '#f00'],  // 6, Red,     360°
+            'val':     ['#000', '#fff'],
+            'kelvin':  ['#fff', '#000'],
+            'cyan':    ['#000', '#0ff'],
+            'yellow':  ['#000', '#ff0'],
+            'magenta': ['#000', '#f0f']
+          };
+
+          var initHistogram = function() {
+            var grad, color, i, n;
+            for (grad in gradients) {
+              color = colors[grad];
+              grad = gradients[grad];
+
+              for (i = 0, n = color.length; i < n; i++) {
+                grad.addColorStop(i*1/(n-1), color[i]);
+              }
+            }
+          };
+
+          initHistogram();
+        };
+
+        // Unhide histogram div to show all the histogram generated
         app.showHistogram = function(image) {
           viewHistogram.style.display = "block";
+          
+          app.calculateHistogram();
 
+          // Dibawah ini masih nyoba nyoba chart pake Chartist (ignore aja)
           var data = {
             labels: [...Array(256).keys()],
             series: [
