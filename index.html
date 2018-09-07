@@ -14,8 +14,19 @@
 
   <style>
     .ct-series-a .ct-bar {
+      stroke-width: 1px;
+    }
+    .xred .ct-series-a .ct-bar{
+      stroke: red;
+    }
+    .xgreen .ct-series-a .ct-bar{
+      stroke: green;
+    }
+    .xblue .ct-series-a .ct-bar{
+      stroke: blue;
+    }
+    .xgrey .ct-series-a .ct-bar{
       stroke: grey;
-      stroke-width: 2px;
     }
   </style>
   
@@ -61,19 +72,19 @@
     <div class="row">
       <div class="col s6 center">
         <small>Red</small>
-        <div id="histRed" class="ct-chart ct-perfect-fourth"></div>
+        <div id="histRed" class="ct-chart ct-perfect-fourth xred"></div>
       </div>
       <div class="col s6 center">
         <small>Green</small>
-        <div id="histGreen" class="ct-chart ct-perfect-fourth"></div>
+        <div id="histGreen" class="ct-chart ct-perfect-fourth xgreen"></div>
       </div>
       <div class="col s6 center">
         <small>Blue</small>
-        <div id="histBlue" class="ct-chart ct-perfect-fourth"></div>
+        <div id="histBlue" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
       <div class="col s6 center">
         <small>Grey</small>
-        <div id="histGrey" class="ct-chart ct-perfect-fourth"></div>
+        <div id="histGrey" class="ct-chart ct-perfect-fourth xgrey"></div>
       </div>
       <div class="col s12 center" hidden>
         <canvas id="canvasHist" width="300" height="250" style="border: 1px solid black">Your browser does not have support for Canvas.</canvas>
