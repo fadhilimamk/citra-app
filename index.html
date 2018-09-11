@@ -108,6 +108,9 @@
         var app = {
           isLoading: true
         };
+
+        var canvas;
+        var context;
       
         /*****************************************************************************
          *
@@ -140,23 +143,21 @@
               // console.log(img)
             };
 
-            var image = document.getElementById("imgBefore");
-            var canvas = document.createElement("canvas");
-            var context = canvas.getContext("2d");
+            var image_src = document.getElementById("imgBefore");
+            canvas = document.createElement("canvas");
+            context = canvas.getContext("2d");
             
-            canvas.width = image.width;
-            canvas.height = image.height;
+            canvas.width = image_src.width;
+            canvas.height = image_src.height;
 
-            context.drawImage(image, 0, 0);
+            context.drawImage(image_src, 0, 0);
 
-            var data = context.getImageData(0, 0, canvas.width, canvas.height);
-
-            console.log(data);
+            var img = context.getImageData(0, 0, canvas.width, canvas.height);
             
             // console.log(inputImageGallery.files)
             // console.log(inputImageGallery.files[0])
             reader.readAsDataURL(inputImageGallery.files[0]);
-            app.showHistogram();
+            app.showHistogram(img);
           }
         });
 
@@ -180,6 +181,10 @@
 
         app.showHistogram = function(image) {
           viewHistogram.style.display = "block";
+
+          console.log(image);
+
+          
           var data = {
             labels: [...Array(256).keys()],
             series: [
