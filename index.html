@@ -227,7 +227,8 @@
        * Methods to update/refresh the UI
        *
        ****************************************************************************/
-        var viewHistogram = document.getElementById("viewHistogram");
+        var viewHistogram = document.getElementById("viewHistogram"); 
+        var chans = [[]];
 
         // Display selected image to imgBefore, then start to process the histogram
         app.showImage = function(image) {
@@ -244,10 +245,9 @@
 
               // console.log("image data:");
               // console.log(app.imageData);
-
-              app.showHistogram();
               app.calculateHistogram();
-
+              app.showHistogram();
+              viewHistogram.style.display = "block";
             }
             app.image.src = e.target.result;
 
@@ -261,8 +261,7 @@
           var img = app.image;
 
           var type = 'rgb';
-          var chans = [[]],
-          maxCount = 0, val, subtypes = [type];
+          var maxCount = 0, val, subtypes = [type];
 
           chans = [[], [], [], []];
           subtypes = ['red', 'green', 'blue', 'grey'];
@@ -301,10 +300,15 @@
             return;
           }
 
+          
+        };
+
+        // Unhide histogram div to show all the histogram generated
+        app.showHistogram = function() {
           // Draw histogram
           var hist_id = ['#histRed', '#histGreen', '#histBlue', '#histGrey'];
           var cum_id = ['#cumRed', '#cumGreen', '#cumBlue', '#cumGrey'];
-          for (cnl = 0; cnl < chans.length; cnl++) {
+          for (var cnl = 0; cnl < chans.length; cnl++) {
             var data = {
               labels: [...Array(256).keys()],
               series: [
@@ -323,7 +327,7 @@
             //   cum[i] /= sum_cum;
             // }
 
-            console.log(cum);
+            // console.log(cum);
             var cum_dis = {
               labels: [...Array(256).keys()],
               series: [
@@ -368,118 +372,6 @@
             new Chartist.Bar(hist_id[cnl], data, properties);
             new Chartist.Line(cum_id[cnl], cum_dis, properties, responsiveOptions);
           }
-
-          return;
-
-          // histCtx.clearRect(0, 0, histCanvas.width, histCanvas.height);
-
-          // if (plotFill && chans.length > 1) {
-          //   histCtx.globalCompositeOperation = 'lighter';
-          // }
-
-          // for (var i = 0, n = chans.length; i < n; i++) {
-          //   drawHist(subtypes[i], chans[i], maxCount);
-          // }
-
-          // if (plotFill && chans.length > 1) {
-          //   histCtx.globalCompositeOperation = 'source-over';
-          // }
-
-        };
-
-        var drawHist = function (type, vals, maxCount) {
-          var ctxStyle;
-          var plotStyle = 'continuous';
-          var plotColors = 'flat';
-
-          if (plotFill || plotStyle === 'discreet') {
-            ctxStyle = 'fillStyle';
-            histCtx.strokeStyle = '#000';
-          } else {
-            ctxStyle = 'strokeStyle';
-          }
-
-          if (plotColors === 'flat') {
-            if (type === 'hue') {
-              histCtx[ctxStyle] = gradients.hue;
-            } else if (type in colors && type !== 'val') {
-              histCtx[ctxStyle] = colors[type][1];
-            } else {
-              histCtx[ctxStyle] = '#000';
-            }
-
-          } else if (plotColors === 'gradient') {
-            if (type in gradients) {
-              histCtx[ctxStyle] = gradients[type];
-            } else {
-              histCtx[ctxStyle] = '#000';
-            }
-          } else if (plotColors.value === 'none') {
-            histCtx[ctxStyle] = '#000';
-          }
-
-          if (plotStyle === 'continuous') {
-            histCtx.beginPath();
-            histCtx.moveTo(0, histCanvas.height);
-          }
-
-          for (var x, y, i = 0; i <= 255; i++) {
-            if (!(i in vals)) {
-              continue;
-            }
-
-            y = Math.round((vals[i]/maxCount)*histCanvas.height);
-            x = Math.round((i/255)*histCanvas.width);
-
-            if (plotStyle.value === 'continuous') {
-              histCtx.lineTo(x, histCanvas.height - y);
-            } else if (plotStyle.value === 'discreet') {
-              if (plotFill) {
-                histCtx.fillRect(x, histCanvas.height - y, discreetWidth, y);
-              } else {
-                histCtx.fillRect(x, histCanvas.height - y, discreetWidth, 2);
-              }
-            }
-          }
-
-          if (plotStyle === 'continuous') {
-            histCtx.lineTo(x, histCanvas.height);
-            if (plotFill) {
-              histCtx.fill();
-            }
-            histCtx.stroke();
-            histCtx.closePath();
-          }
-        };
-
-
-        // Unhide histogram div to show all the histogram generated
-        app.showHistogram = function(image) {
-          viewHistogram.style.display = "block";
-
-          // console.log(image);
-        
-          // Dibawah ini masih nyoba nyoba chart pake Chartist (ignore aja)
-          var data = {
-            labels: [...Array(256).keys()],
-            series: [
-              [...Array(256).keys()]
-            ]
-          };
-
-          var properties = {
-            axisX: {
-              showLabel: false
-            },
-            axisY: {
-              onlyInteger: true
-            }
-          };
-
-          // new Chartist.Bar('#histRed', data, properties);
-          // new Chartist.Bar('#histGreen', data, properties);
-          // new Chartist.Bar('#histBlue', data, properties);
-          // new Chartist.Bar('#histGrey', data, properties);
         };
 
     }());
