@@ -136,7 +136,25 @@
             var reader = new FileReader();
             reader.onload = function (e) {
               document.getElementById("imgBefore").src = e.target.result;
+              // console.log(e.target.result)
+              // console.log(img)
             };
+
+            var image = document.getElementById("imgBefore");
+            var canvas = document.createElement("canvas");
+            var context = canvas.getContext("2d");
+            
+            canvas.width = image.width;
+            canvas.height = image.height;
+
+            context.drawImage(image, 0, 0);
+
+            var data = context.getImageData(0, 0, canvas.width, canvas.height);
+
+            console.log(data);
+            
+            // console.log(inputImageGallery.files)
+            // console.log(inputImageGallery.files[0])
             reader.readAsDataURL(inputImageGallery.files[0]);
             app.showHistogram();
           }
@@ -162,7 +180,6 @@
 
         app.showHistogram = function(image) {
           viewHistogram.style.display = "block";
-
           var data = {
             labels: [...Array(256).keys()],
             series: [
