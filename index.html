@@ -133,7 +133,7 @@
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> -->
   <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
   <!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
-  <script src="scripts/jpeg_encoder_basic.js" async></script>
+  <script src="scripts/regression.js" async></script>
   <script type="text/javascript">
 
     (function() {
@@ -239,6 +239,7 @@
         var r_cum = [], r_map = [];
         var g_cum = [], g_map = [];
         var b_cum = [], b_map = [];
+        var image_size;
 
         // Display selected image to imgBefore, then start to process the histogram
         app.showImage = function(image) {
@@ -258,10 +259,40 @@
               app.calculateHistogram();
               app.showHistogram();
               app.CalculateAluMapping();
+              
+              
+              // histogram equalization
               app.convertImage();
               app.calculateHistogram();
               app.showHistogram();
               viewHistogram.style.display = "block";
+          
+              
+              // histogram specification
+              // Nyoba regresi dengan 3 titik
+              var degree = 2;
+              var actualData = [], regressionData = [], someData = [];
+              var x = 0;
+              var y = 10;
+              someData.push(new DataPoint(x, y));
+              actualData.push({ x: x, y: y});
+              x = 128;
+              y = image_size;
+              someData.push(new DataPoint(x, y));
+              actualData.push({ x: x, y: y});
+              x =255;
+              y = 10;
+              someData.push(new DataPoint(x, y));
+              actualData.push({ x: x, y: y});
+
+              var poly = new PolynomialRegression(someData, degree);
+              var terms = poly.getTerms();
+
+              actualData.forEach(function (data) {
+                regressionData.push({ x: data.x, y: poly.predictY(terms, data.x) });
+              });
+
+              console.log(regressionData);
             }
             app.image.src = e.target.result;
 
@@ -411,7 +442,7 @@
           // console.log(r_cum);
           // console.log(g_cum);
           // console.log(b_cum);
-          var image_size = app.image.width * app.image.height;
+          image_size = app.image.width * app.image.height;
           for (var i = 0; i < r_cum.length; ++i) {
             r_map[i] = Math.abs(Math.round((r_cum[i]-1)*255/image_size));
           }
