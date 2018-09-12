@@ -133,6 +133,7 @@
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> -->
   <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
   <!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
+  <script src="scripts/jpeg_encoder_basic.js" async></script>
   <script type="text/javascript">
 
     (function() {
@@ -143,6 +144,7 @@
         var app = {
           isLoading: true,
           image: document.getElementById("imgBefore"),
+          imageAfter :document.getElementById("imgAfter"),
           imageCanvas: document.createElement("canvas"),
           imageCtx: null,
           imageData: null,
@@ -208,6 +210,11 @@
             reader.readAsDataURL(inputImageGallery.files[0]);
             app.showHistogram();
             app.showImage(inputImageGallery.files[0]);
+
+            var img = document.getElementById("imgAfter");
+            var ctx = app.imageCanvas.getContext("2d");
+            ctx.drawImage(img, 10, 10);
+
           }
         });
 
@@ -229,6 +236,9 @@
        ****************************************************************************/
         var viewHistogram = document.getElementById("viewHistogram"); 
         var chans = [[]];
+        var r_cum = [], r_map = [];
+        var g_cum = [], g_map = [];
+        var b_cum = [], b_map = [];
 
         // Display selected image to imgBefore, then start to process the histogram
         app.showImage = function(image) {
@@ -247,6 +257,10 @@
               // console.log(app.imageData);
               app.calculateHistogram();
               app.showHistogram();
+              app.CalculateAluMapping();
+              app.convertImage();
+              app.calculateHistogram();
+              app.showHistogram();
               viewHistogram.style.display = "block";
             }
             app.image.src = e.target.result;
@@ -255,6 +269,19 @@
           reader.readAsDataURL(image);
 
         };
+
+        app.showResultImage = function() {
+          app.imageAfter.onload = function() {
+            app.imageAfter = app.image;
+
+            // prepare canvas and data for processing
+            app.imageCanvas.width = app.image.width;
+            app.imageCanvas.height = app.image.height;
+            app.imageCtx = app.imageCanvas.getContext('2d');
+            app.imageCtx.drawImage(app.imageAfter, 0, 0);
+            app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
+          }
+        }
 
         // Calculate image RGB-Grey histogram, using canvas
         app.calculateHistogram = function() {
@@ -299,8 +326,6 @@
           if (maxCount === 0) {
             return;
           }
-
-          
         };
 
         // Unhide histogram div to show all the histogram generated
@@ -321,6 +346,14 @@
             for (var i = 0; i < chans[cnl].length; ++i) {
               cum[i] = chans[cnl][i] + sum_cum;
               sum_cum += chans[cnl][i];
+            }
+
+            if (cnl == 0) {
+              r_cum = cum;
+            } else if (cnl == 1) {
+              g_cum = cum;
+            } else if (cnl == 2) {
+              b_cum = cum;
             }
 
             // for (var i = 0; i < chans[cnl].length; ++i) {
@@ -373,6 +406,34 @@
             new Chartist.Line(cum_id[cnl], cum_dis, properties, responsiveOptions);
           }
         };
+
+        app.CalculateAluMapping = function () {
+          // console.log(r_cum);
+          // console.log(g_cum);
+          // console.log(b_cum);
+          var image_size = app.image.width * app.image.height;
+          for (var i = 0; i < r_cum.length; ++i) {
+            r_map[i] = Math.abs(Math.round((r_cum[i]-1)*255/image_size));
+          }
+          // console.log(r_map);
+          for (var i = 0; i < g_cum.length; ++i) {
+            g_map[i] = Math.abs(Math.round((g_cum[i] - 1) * 255 / image_size));
+          }
+
+          for (var i = 0; i < b_cum.length; ++i) {
+            b_map[i] = Math.abs(Math.round((b_cum[i] - 1) * 255 / image_size));
+          }
+        };
+
+        app.convertImage = function () {
+          var step = 4;
+
+          for (var i = 0, n = app.imageData.length; i < n; i += step) {
+            app.imageData[i] = r_map[app.imageData[i]];
+            app.imageData[i + 1] = g_map[app.imageData[i + 1]];
+            app.imageData[i + 2] = b_map[app.imageData[i + 2]];
+          }
+        }  
 
     }());
 
