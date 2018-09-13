@@ -163,6 +163,9 @@
         
         var plotFill = true;
 
+        var MODE_HIST_EQUAL = 0;
+        var MODE_HIST_SPEC = 1;
+
         var app = {
           isLoading: true,
           image: document.getElementById("imgBefore"),
@@ -170,7 +173,11 @@
           imageCanvas: document.createElement("canvas"),
           imageCtx: null,
           imageData: null,
-          plotFill: true
+          plotFill: true,
+          mode: MODE_HIST_EQUAL
+          // 0 Histogram Equalization
+          // 1 Histogram Specification
+
         };
 
         var histCanvas = document.getElementById("canvasHist");
@@ -259,6 +266,42 @@
 
         var first_cum;
 
+        // global var for histogram
+        var properties, responsiveOptions;
+
+        properties = {
+          axisX: {
+            showLabel: false
+          },
+          axisY: {
+            onlyInteger: true
+          },
+          lineSmooth: Chartist.Interpolation.cardinal({
+            tension: 0.2
+          })
+        };
+
+        responsiveOptions = [
+          ['screen and (min-width: 641px) and (max-width: 1024px)', {
+            showPoint: false,
+            axisX: {
+              labelInterpolationFnc: function (value) {
+                // Will return Mon, Tue, Wed etc. on medium screens
+                return value.slice(0, 3);
+              }
+            }
+          }],
+          ['screen and (max-width: 640px)', {
+            showLine: false,
+            axisX: {
+              labelInterpolationFnc: function (value) {
+                // Will return M, T, W etc. on small screens
+                return value[0];
+              }
+            }
+          }]
+        ];
+
         // Display selected image to imgBefore, then start to process the histogram
         app.showImage = function(image) {
           var reader = new FileReader();
@@ -270,139 +313,111 @@
               app.imageCanvas.height = app.image.height;
               app.imageCtx = app.imageCanvas.getContext('2d');
               app.imageCtx.drawImage(app.image, 0, 0, app.image.width, app.image.height);
-
               app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
-              app.calculateHistogram();
-              app.showHistogram();
-              app.CalculateAluMapping();
               
-              
-              // histogram equalization
-              // app.convertImage();
-              // app.calculateHistogram();
-              app.showHistogram();
-
-              app.showResultImage();
               viewHistogram.style.display = "block";
 
-              // histogram specification
-              // Nyoba regresi dengan 3 titik
-              var degree = 4;
-              var actualData = [], regressionData = [], someData = [], inverseData = [];
-              // var map_poly = new Map(), map_inverse_poly = new Map();
-              var x = 0;
-              var y = 10;
-              someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y });
-              x = 64;
-              y =50;
-              someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y });
-              x = 128;
-              y = 90;
-              someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y });
-              x = 192;
-              y = 50;
-              someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y });
-              x = 255;
-              y = 10;
-              someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y });
+              app.mode = MODE_HIST_SPEC;
 
-              var poly = new PolynomialRegression(someData, degree);
-              var terms = poly.getTerms();
+              // check mode
+              if (app.mode == MODE_HIST_EQUAL) {
+                
+                app.calculateHistogram();
+                app.showHistogram();
+                app.CalculateAluMapping();
 
-              actualData.forEach(function (data) {
-                regressionData.push({ x: data.x, y: poly.predictY(terms, data.x) });
-                // map_poly.set(data.x, poly.predictY(terms, data.x));
-              });
+                // histogram equalization
+                app.convertImage();
+                app.calculateHistogram();
+                app.showHistogram();
+                app.showResultImage();
+                
+              } else if (app.mode == MODE_HIST_SPEC) {
 
-              var hist_spec = [];
-              for (var i = 0; i < 256; ++i) {
-                hist_spec.push(poly.predictY(terms, i));
-              }
+                app.calculateHistogram();
+                app.showHistogram();
 
-              var hist_id = '#histRed';
-              var data = {
-                labels: [...Array(256).keys()],
-                series: [
-                  hist_spec
-                ]
-              };
+                // histogram specification
+                // Nyoba regresi dengan 5 titik
+                var degree = 4;
+                var someData = [];
+                // var map_poly = new Map(), map_inverse_poly = new Map();
+                var x = 0;
+                var y = 10;
+                someData.push(new DataPoint(x, y));
+                x = 64;
+                y = 50;
+                someData.push(new DataPoint(x, y));
+                x = 128;
+                y = 90;
+                someData.push(new DataPoint(x, y));
+                x = 192;
+                y = 50;
+                someData.push(new DataPoint(x, y));
+                x = 255;
+                y = 10;
+                someData.push(new DataPoint(x, y));
 
-              var properties = {
-                axisX: {
-                  showLabel: false
-                },
-                axisY: {
-                  onlyInteger: true
-                },
-                lineSmooth: Chartist.Interpolation.cardinal({
-                  tension: 0.2
-                })
-              };
+                var poly = new PolynomialRegression(someData, degree);
+                var terms = poly.getTerms();
 
-              new Chartist.Bar(hist_id, data, properties);
+                var hist_spec = [];
+                for (var i = 0; i < 256; ++i) {
+                  hist_spec.push(Math.round(poly.predictY(terms, i)));
+                }
 
-              var hist_spec_sum = [];
-              var sum = 0;
-              for (var i = 0; i < 256; ++i) {
-                hist_spec_sum.push(hist_spec[i] + sum);
-                sum += hist_spec[i];
-              }
+                var second_bar_id = ['#cumRed', '#cumGreen', '#cumBlue', '#cumGrey'];
 
-              var cum_id = '#cumRed';
+                var hist_spec_sum = [];
+                var sum = 0;
+                for (var i = 0; i < 256; ++i) {
+                  hist_spec_sum.push(hist_spec[i] + sum);
+                  sum += hist_spec[i];
+                }
 
-              var sum_data = {
-                labels: [...Array(256).keys()],
-                series: [
-                  hist_spec_sum
-                ]
-              };
+                for (var cnl = 0; cnl < chans.length; cnl++) {                  
 
+                  var cum = [];
+                  var sum_cum = 0;
+                  for (var i = 0; i < chans[cnl].length; ++i) {
+                    cum[i] = chans[cnl][i] + sum_cum;
+                    sum_cum += chans[cnl][i];
+                  }
 
-              var responsiveOptions = [
-                ['screen and (min-width: 641px) and (max-width: 1024px)', {
-                  showPoint: false,
-                  axisX: {
-                    labelInterpolationFnc: function (value) {
-                      // Will return Mon, Tue, Wed etc. on medium screens
-                      return value.slice(0, 3);
+                  var map_hist_spec;
+                  map_hist_spec = app.getHistSpecArr(cum, hist_spec_sum);
+
+                  var val, n, step = 4;
+                  if (cnl == 0) {
+                    for (var i = 0, n = app.imageData.length; i < n; i += step) {
+                      app.imageData[i] = map_hist_spec[app.imageData[i]];
+                    }
+                  } else if (cnl == 1) {
+                    for (var i = 0, n = app.imageData.length; i < n; i += step) {
+                      app.imageData[i + 1] = map_hist_spec[app.imageData[i + 1]];
+                    }
+                  } else if (cnl == 2) {
+                    for (var i = 0, n = app.imageData.length; i < n; i += step) {
+                      app.imageData[i + 2] = map_hist_spec[app.imageData[i + 2]];
                     }
                   }
-                }],
-                ['screen and (max-width: 640px)', {
-                  showLine: false,
-                  axisX: {
-                    labelInterpolationFnc: function (value) {
-                      // Will return M, T, W etc. on small screens
-                      return value[0];
-                    }
-                  }
-                }]
-              ];
 
-              new Chartist.Line(cum_id, sum_data, properties, responsiveOptions);
+                  app.calculateHistogram();
+                  var data = {
+                    labels: [...Array(256).keys()],
+                    series: [
+                      chans[cnl]
+                    ]
+                  };
 
-              // console.log(first_cum);
-              // console.log(hist_spec_sum);
+                  new Chartist.Bar(second_bar_id[cnl], data, properties);
 
-              var map_hist_spec = app.getHistSpecArr(first_cum, hist_spec_sum);
+                  app.showResultImage();
+                  
+                }
 
-              // console.log(map_hist_spec);
+              }
               
-              var val, n, step = 4;
-              for (var i = 0, n = app.imageData.length; i < n; i += step) {
-                app.imageData[i] = map_hist_spec[app.imageData[i]];
-                app.imageData[i + 1] = map_hist_spec[app.imageData[i + 1]];
-                app.imageData[i + 2] = map_hist_spec[app.imageData[i + 2]];
-              }
-
-              app.calculateHistogram();
-              app.showHistogram();
-  
             }
             app.image.src = e.target.result;
 
@@ -544,40 +559,6 @@
                 cum
               ]
             };
-
-
-            var properties = {
-              axisX: {
-                showLabel: false
-              },
-              axisY: {
-                onlyInteger: true
-              },
-              lineSmooth: Chartist.Interpolation.cardinal({
-                tension: 0.2
-              })
-            };
-
-            var responsiveOptions = [
-              ['screen and (min-width: 641px) and (max-width: 1024px)', {
-                showPoint: false,
-                axisX: {
-                  labelInterpolationFnc: function (value) {
-                    // Will return Mon, Tue, Wed etc. on medium screens
-                    return value.slice(0, 3);
-                  }
-                }
-              }],
-              ['screen and (max-width: 640px)', {
-                showLine: false,
-                axisX: {
-                  labelInterpolationFnc: function (value) {
-                    // Will return M, T, W etc. on small screens
-                    return value[0];
-                  }
-                }
-              }]
-            ];
 
             new Chartist.Bar(hist_id[cnl], data, properties);
             new Chartist.Line(cum_id[cnl], cum_dis, properties, responsiveOptions);
