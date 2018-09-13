@@ -278,8 +278,8 @@
               
               
               // histogram equalization
-              app.convertImage();
-              app.calculateHistogram();
+              // app.convertImage();
+              // app.calculateHistogram();
               app.showHistogram();
 
               app.showResultImage();
@@ -386,22 +386,22 @@
 
               new Chartist.Line(cum_id, sum_data, properties, responsiveOptions);
 
-              var new_hist = app.getHistSpecArr(first_cum, sum_data);
+              // console.log(first_cum);
+              // console.log(hist_spec_sum);
 
-              // inverse function
-              var inverse_poly = new PolynomialRegression(inverseData, degree);
-              var inverse_terms = inverse_poly.getTerms();
+              var map_hist_spec = app.getHistSpecArr(first_cum, hist_spec_sum);
 
-              console.log(terms);
-              console.log(inverse_terms);
-              x = 10;
-              y = poly.predictY(terms, x)
-              console.log(x);
-              console.log(y);
-              console.log(inverse_poly.predictY(inverse_terms, y));
+              // console.log(map_hist_spec);
+              
+              var val, n, step = 4;
+              for (var i = 0, n = app.imageData.length; i < n; i += step) {
+                app.imageData[i] = map_hist_spec[app.imageData[i]];
+                app.imageData[i + 1] = map_hist_spec[app.imageData[i + 1]];
+                app.imageData[i + 2] = map_hist_spec[app.imageData[i + 2]];
+              }
 
-              console.log(regressionData);
-          
+              app.calculateHistogram();
+              app.showHistogram();
   
             }
             app.image.src = e.target.result;
@@ -418,18 +418,41 @@
           for (var i =0; i < 256; ++i) {
             cum_first[i] = Math.round(cum_first[i] * cum_second[255] / cum_first[255]);
           }
-
+          
+          console.log(cum_first);
+          console.log(cum_second);
+          
           var inverse_second = [];
+          var last_val = 0;
           for (var i = 0; i < cum_second[255]; ++i) {
             if (i <= cum_second[0]) {
               inverse_second[i] = 0;
             } else if (i >= cum_second[255]) {
               inverse_second[i] = 255;
             } else {
-
+              if (i <= cum_second[last_val]) {
+                inverse_second[i] = last_val;
+              } else if (i > cum_second[last_val]) {
+                var range = cum_second[last_val+1] - cum_second[last_val];
+                var dif = i - cum_second[last_val];
+                if (2*dif >= range) {
+                  last_val++;
+                }
+                inverse_second[i] = last_val;
+              }
             }
           }
+          
+          // console.log("INVERSE");
+          // console.log(cum_first[255]);
+          // console.log(inverse_second);
 
+          var ret = [];
+          for (var i = 0; i < 256; ++i) {
+            ret[i] = inverse_second[cum_first[i]];
+          }
+
+          return ret;
 
         }
 
