@@ -158,7 +158,6 @@
   <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
   <script src="scripts/regression.js" async></script>
   <script type="text/javascript">
-
     (function() {
         'use strict';
         
@@ -258,6 +257,8 @@
         var b_cum = [], b_map = [];
         var image_size;
 
+        var first_cum;
+
         // Display selected image to imgBefore, then start to process the histogram
         app.showImage = function(image) {
           var reader = new FileReader();
@@ -283,33 +284,125 @@
 
               app.showResultImage();
               viewHistogram.style.display = "block";
-          
-              
+
               // histogram specification
               // Nyoba regresi dengan 3 titik
-              var degree = 2;
-              var actualData = [], regressionData = [], someData = [];
+              var degree = 4;
+              var actualData = [], regressionData = [], someData = [], inverseData = [];
+              // var map_poly = new Map(), map_inverse_poly = new Map();
               var x = 0;
               var y = 10;
               someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y});
-              x = 128;
-              y = image_size;
+              actualData.push({ x: x, y: y });
+              x = 64;
+              y =50;
               someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y});
-              x =255;
+              actualData.push({ x: x, y: y });
+              x = 128;
+              y = 90;
+              someData.push(new DataPoint(x, y));
+              actualData.push({ x: x, y: y });
+              x = 192;
+              y = 50;
+              someData.push(new DataPoint(x, y));
+              actualData.push({ x: x, y: y });
+              x = 255;
               y = 10;
               someData.push(new DataPoint(x, y));
-              actualData.push({ x: x, y: y});
+              actualData.push({ x: x, y: y });
 
               var poly = new PolynomialRegression(someData, degree);
               var terms = poly.getTerms();
 
               actualData.forEach(function (data) {
                 regressionData.push({ x: data.x, y: poly.predictY(terms, data.x) });
+                // map_poly.set(data.x, poly.predictY(terms, data.x));
               });
 
-              // console.log(regressionData);
+              var hist_spec = [];
+              for (var i = 0; i < 256; ++i) {
+                hist_spec.push(poly.predictY(terms, i));
+              }
+
+              var hist_id = '#histRed';
+              var data = {
+                labels: [...Array(256).keys()],
+                series: [
+                  hist_spec
+                ]
+              };
+
+              var properties = {
+                axisX: {
+                  showLabel: false
+                },
+                axisY: {
+                  onlyInteger: true
+                },
+                lineSmooth: Chartist.Interpolation.cardinal({
+                  tension: 0.2
+                })
+              };
+
+              new Chartist.Bar(hist_id, data, properties);
+
+              var hist_spec_sum = [];
+              var sum = 0;
+              for (var i = 0; i < 256; ++i) {
+                hist_spec_sum.push(hist_spec[i] + sum);
+                sum += hist_spec[i];
+              }
+
+              var cum_id = '#cumRed';
+
+              var sum_data = {
+                labels: [...Array(256).keys()],
+                series: [
+                  hist_spec_sum
+                ]
+              };
+
+
+              var responsiveOptions = [
+                ['screen and (min-width: 641px) and (max-width: 1024px)', {
+                  showPoint: false,
+                  axisX: {
+                    labelInterpolationFnc: function (value) {
+                      // Will return Mon, Tue, Wed etc. on medium screens
+                      return value.slice(0, 3);
+                    }
+                  }
+                }],
+                ['screen and (max-width: 640px)', {
+                  showLine: false,
+                  axisX: {
+                    labelInterpolationFnc: function (value) {
+                      // Will return M, T, W etc. on small screens
+                      return value[0];
+                    }
+                  }
+                }]
+              ];
+
+              new Chartist.Line(cum_id, sum_data, properties, responsiveOptions);
+
+              var new_hist = app.getHistSpecArr(first_cum, sum_data);
+
+              // inverse function
+              var inverse_poly = new PolynomialRegression(inverseData, degree);
+              var inverse_terms = inverse_poly.getTerms();
+
+              console.log(terms);
+              console.log(inverse_terms);
+              x = 10;
+              y = poly.predictY(terms, x)
+              console.log(x);
+              console.log(y);
+              console.log(inverse_poly.predictY(inverse_terms, y));
+
+              console.log(regressionData);
+          
+  
             }
             app.image.src = e.target.result;
 
@@ -317,6 +410,28 @@
           reader.readAsDataURL(image);
 
         };
+
+        app.getHistSpecArr = function(cum_first, cum_second) {
+          
+          // normaliaasi ukuran.
+          // biar max nya sama
+          for (var i =0; i < 256; ++i) {
+            cum_first[i] = Math.round(cum_first[i] * cum_second[255] / cum_first[255]);
+          }
+
+          var inverse_second = [];
+          for (var i = 0; i < cum_second[255]; ++i) {
+            if (i <= cum_second[0]) {
+              inverse_second[i] = 0;
+            } else if (i >= cum_second[255]) {
+              inverse_second[i] = 255;
+            } else {
+
+            }
+          }
+
+
+        }
 
         // Calculate image RGB-Grey histogram, using canvas
         app.calculateHistogram = function() {
@@ -375,6 +490,9 @@
                 chans[cnl]
               ]
             };
+            
+            // console.log("chans")
+            // console.log(chans[cnl]);
 
             var cum = [];
             var sum_cum = 0;
@@ -385,6 +503,7 @@
 
             if (cnl == 0) {
               r_cum = cum;
+              first_cum = r_cum;
             } else if (cnl == 1) {
               g_cum = cum;
             } else if (cnl == 2) {
