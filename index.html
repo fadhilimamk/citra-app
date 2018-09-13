@@ -65,7 +65,7 @@
       <div class="col s6">
         <div class="card">
           <div class="card-image">
-            <img id="imgBefore" src="images/empty.png">
+            <img id="imgBefore" src="images/empty.png" style='height: auto; width: 100%'>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@
       <div class="col s6">
         <div class="card">
           <div class="card-image">
-            <img id="imgAfter" src="images/empty.png">
+            <img id="imgAfter" src="images/empty.png" style='height: auto; width: 100%'>
           </div>
         </div>
       </div>
@@ -220,7 +220,7 @@
 
         inputImageCamera.addEventListener('change', function() {
           if (inputImageCamera.files && inputImageCamera.files[0]) {
-            app.showImage(inputImageCamera.files[0]);
+            // app.showImage(inputImageCamera.files[0]);
           }
         });
 
@@ -231,13 +231,7 @@
               document.getElementById("imgBefore").src = e.target.result;
             };
             reader.readAsDataURL(inputImageGallery.files[0]);
-            app.showHistogram();
             app.showImage(inputImageGallery.files[0]);
-
-            var img = document.getElementById("imgAfter");
-            var ctx = app.imageCanvas.getContext("2d");
-            ctx.drawImage(img, 10, 10);
-
           }
         });
 
@@ -274,11 +268,9 @@
               app.imageCanvas.width = app.image.width;
               app.imageCanvas.height = app.image.height;
               app.imageCtx = app.imageCanvas.getContext('2d');
-              app.imageCtx.drawImage(app.image, 0, 0);
-              app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
+              app.imageCtx.drawImage(app.image, 0, 0, app.image.width, app.image.height);
 
-              // console.log("image data:");
-              // console.log(app.imageData);
+              app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
               app.calculateHistogram();
               app.showHistogram();
               app.CalculateAluMapping();
@@ -288,6 +280,8 @@
               app.convertImage();
               app.calculateHistogram();
               app.showHistogram();
+
+              app.showResultImage();
               viewHistogram.style.display = "block";
           
               
@@ -315,7 +309,7 @@
                 regressionData.push({ x: data.x, y: poly.predictY(terms, data.x) });
               });
 
-              console.log(regressionData);
+              // console.log(regressionData);
             }
             app.image.src = e.target.result;
 
@@ -323,19 +317,6 @@
           reader.readAsDataURL(image);
 
         };
-
-        app.showResultImage = function() {
-          app.imageAfter.onload = function() {
-            app.imageAfter = app.image;
-
-            // prepare canvas and data for processing
-            app.imageCanvas.width = app.image.width;
-            app.imageCanvas.height = app.image.height;
-            app.imageCtx = app.imageCanvas.getContext('2d');
-            app.imageCtx.drawImage(app.imageAfter, 0, 0);
-            app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
-          }
-        }
 
         // Calculate image RGB-Grey histogram, using canvas
         app.calculateHistogram = function() {
@@ -487,12 +468,20 @@
             app.imageData[i + 1] = g_map[app.imageData[i + 1]];
             app.imageData[i + 2] = b_map[app.imageData[i + 2]];
           }
-        }  
+        } 
+
+        app.showResultImage = function () {
+          var canvas = document.createElement("canvas");
+          canvas.width = app.image.width;
+          canvas.height = app.image.height;
+          var ctx = canvas.getContext("2d");
+          ctx.putImageData(new ImageData(app.imageData, canvas.width, canvas.height), 0, 0);  
+          app.imageAfter.src = canvas.toDataURL("img/png");
+        }
 
     }());
 
   </script>
-  <!-- <script src="scripts/app.js" async></script> -->
 
 </body>
 </html>
