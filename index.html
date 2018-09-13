@@ -6,9 +6,11 @@
   <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Citra App</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="styles/range.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
 
   <!-- TODO add manifest here -->
 
@@ -60,8 +62,21 @@
   <input id="inputImageCamera" type="file" accept="image/*" capture hidden>
   <input id="inputImageGallery" type="file" accept="image/*" hidden>
 
+  <div class="row" style="margin-bottom:3px; margin-top:15px">
+    <div class="col s12">
+      <div class="input-field col s12" style="margin-bottom:5px">
+        <select id="app-mode">
+          <option value="equalization">Image Equalization</option>
+          <option value="specification">Image Specification</option>
+        </select>
+        <label>Select mode:</label>
+      </div>
+    </div>
+  </div>
+
   <div class="container" style="width:100%">
     <div class="row valign-wrapper">
+        
       <div class="col s6">
         <div class="card">
           <div class="card-image">
@@ -121,37 +136,56 @@
         <canvas id="canvasHist" width="300" height="250" style="border: 1px solid black">Your browser does not have support for Canvas.</canvas>
       </div>
     </div>
+
     <hr>
 
-    <div class="row">
-      <div class="col s12">
-        <form action="#">
-          <p class="range-field">
-            <b>Control R channel :</b>
-            <input type="range" id="test1" min="0" max="100" value="25"/>
-          </p>
-        </form>
+  </span>
+
+  <span id="histogram-input">
+      <div class="row center" style="margin-bottom:0px">
+        <div class="col s12">
+          <small>Set desired histogram:</small>
+        </div>
+        <div class="col s2 center" style="height: 70px; margin-top:50px">
+          <input id="slider-1" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+        </div>
+        <div class="col s2 center" style="height: 70px; margin-top:50px">
+          <input id="slider-2" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+        </div>
+        <div class="col s2 center" style="height: 70px; margin-top:50px">
+          <input id="slider-3" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+        </div>
+        <div class="col s2 center" style="height: 70px; margin-top:50px">
+          <input id="slider-4" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+        </div>
+        <div class="col s2 center" style="height: 70px; margin-top:50px">
+          <input id="slider-5" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+        </div>
       </div>
-      <div class="col s12">
-        <form action="#">
-          <p class="range-field">
-            <b>Control G channel :</b>
-            <input type="range" id="test2" min="0" max="100" value="10"/>
-          </p>
-        </form>
+      <div class="row">
+        <div class="col s2" style="padding:0px">
+          <small id="slider-1-value" class="right">12</small>
+        </div>
+        <div class="col s2" style="padding:0px">
+          <small id="slider-2-value" class="right">12</small>
+        </div>
+        <div class="col s2" style="padding:0px">
+          <small id="slider-3-value" class="right">12</small>
+        </div>
+        <div class="col s2" style="padding:0px">
+          <small id="slider-4-value" class="right">12</small>
+        </div>
+        <div class="col s2" style="padding:0px">
+          <small id="slider-5-value" class="right">12</small>
+        </div>
       </div>
-      <div class="col s12">
-        <form action="#">
-          <p class="range-field">
-            <b>Control B channel :</b>
-            <input type="range" id="test3" min="0" max="100" value="10"/>
-          </p>
-        </form>
+
+      <div class="row">
+        <div class="col s12 center">
+          <a class="waves-effect waves-light btn blue darken-1">Process</a>
+        </div>
       </div>
-      <div class="col s12 center">
-        <a class="waves-effect waves-light btn blue darken-1">Process</a>
-      </div>
-    </div>
+
   </span>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
@@ -162,6 +196,11 @@
         'use strict';
         
         var plotFill = true;
+
+        document.addEventListener('DOMContentLoaded', function() {
+          var elems = document.querySelectorAll('select');
+          var instances = M.FormSelect.init(elems);
+        });
 
         var app = {
           isLoading: true,
@@ -532,7 +571,8 @@
               },
               lineSmooth: Chartist.Interpolation.cardinal({
                 tension: 0.2
-              })
+              }),
+              showArea: true
             };
 
             var responsiveOptions = [
@@ -556,7 +596,7 @@
               }]
             ];
 
-            new Chartist.Bar(hist_id[cnl], data, properties);
+            new Chartist.Line(hist_id[cnl], data, properties);
             new Chartist.Line(cum_id[cnl], cum_dis, properties, responsiveOptions);
           }
         };

@@ -1,0 +1,75 @@
+
+.range-container { border: 3px solid #eee; margin: 10px; padding:10px; float:left; text-align: center; max-width: 20%;}
+
+input[type="range"].range {
+    cursor: pointer;
+    width: 100px !important;
+    -webkit-appearance: none;
+    z-index: 200;
+    width:50px;
+    border: 1px solid #e6e6e6;
+    background-color: #e6e6e6;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#e6e6e6), to(#d2d2d2));
+    background-image: -webkit-linear-gradient(right, #e6e6e6, #d2d2d2);
+    background-image: -moz-linear-gradient(right, #e6e6e6, #d2d2d2);
+    background-image: -ms-linear-gradient(right, #e6e6e6, #d2d2d2);
+    background-image: -o-linear-gradient(right, #e6e6e6, #d2d2d2);
+}
+  
+input[type="range"].range:focus{
+    border: 0 !imporant; outline: none !important;
+}
+  
+input[type="range"].range::-webkit-slider-thumb  {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px; background-color: #555;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4DDBFF), to(#00CCFF));
+    background-image: -webkit-linear-gradient(right, #4DDBFF, #00CCFF);
+    background-image: -moz-linear-gradient(right, #4DDBFF, #00CCFF);
+    background-image: -ms-linear-gradient(right, #4DDBFF, #00CCFF);
+    background-image: -o-linear-gradient(right, #4DDBFF, #00CCFF);
+}
+  
+input[type="range"].round {
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
+}
+  
+input[type="range"].round::-webkit-slider-thumb  {
+    -webkit-border-radius: 5px;	-moz-border-radius: 5px; -o-border-radius: 5px;
+}
+  
+.horizontal-lowest-first {
+    -webkit-transform:rotate(0deg);       
+    -moz-transform:rotate(0deg);
+    -o-transform:rotate(0deg);
+    -ms-transform:rotate(0deg);
+    transform:rotate(0deg);
+}
+  
+.horizontal-highest-first {
+    -webkit-transform:rotate(180deg);       
+    -moz-transform:rotate(180deg);
+    -o-transform:rotate(180deg);
+    -ms-transform:rotate(180deg);
+    transform:rotate(180deg);
+}
+  
+.vertical-lowest-first {
+    -webkit-transform:rotate(90deg);       
+    -moz-transform:rotate(90deg);
+    -o-transform:rotate(90deg);
+    -ms-transform:rotate(90deg);
+    transform:rotate(90deg);
+}
+  
+.vertical-heighest-first {
+    -webkit-transform:rotate(270deg);       
+    -moz-transform:rotate(270deg);
+    -o-transform:rotate(270deg);
+    -ms-transform:rotate(270deg);
+    transform:rotate(270deg);
+  }
+  
