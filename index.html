@@ -147,42 +147,42 @@
           <small>Set desired histogram:</small>
         </div>
         <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-1" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+          <input id="slider-0" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
         </div>
         <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-2" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+          <input id="slider-1" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
         </div>
         <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-3" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+          <input id="slider-2" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
         </div>
         <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-4" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+          <input id="slider-3" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
         </div>
         <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-5" class='range vertical-lowest-first round' type='range' min='0' max='1' step='0.1' value='1'>
+          <input id="slider-4" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
         </div>
       </div>
       <div class="row">
         <div class="col s2" style="padding:0px">
-          <small id="slider-1-value" class="right">12</small>
+          <small id="value-slider-0" class="right">10</small>
         </div>
         <div class="col s2" style="padding:0px">
-          <small id="slider-2-value" class="right">12</small>
+          <small id="value-slider-1" class="right">50</small>
         </div>
         <div class="col s2" style="padding:0px">
-          <small id="slider-3-value" class="right">12</small>
+          <small id="value-slider-2" class="right">90</small>
         </div>
         <div class="col s2" style="padding:0px">
-          <small id="slider-4-value" class="right">12</small>
+          <small id="value-slider-3" class="right">50</small>
         </div>
         <div class="col s2" style="padding:0px">
-          <small id="slider-5-value" class="right">12</small>
+          <small id="value-slider-4" class="right">10</small>
         </div>
       </div>
 
       <div class="row">
         <div class="col s12 center">
-          <a class="waves-effect waves-light btn blue darken-1">Process</a>
+          <a class="waves-effect waves-light btn blue darken-1" id="btnProcessSpecification">Process</a>
         </div>
       </div>
 
@@ -216,6 +216,9 @@
             // 0 Histogram Equalization
             // 1 Histogram Specification
         };
+
+        // default value for slider
+        var sliderVal = [10, 50, 90, 50, 10];
 
         var chans = [[]];
         var r_cum = [], r_map = [];
@@ -331,6 +334,26 @@
           inputImageGallery.click();
         });
 
+        var inputSliders = document.querySelectorAll('[id^=slider-]');
+        var count = 0;
+        inputSliders.forEach( function(slider) {
+          slider.addEventListener('change', function() {
+            var sliderId = slider.id.split('-', 2)[1];
+            document.getElementById("value-slider-" + sliderId).textContent = slider.value;
+            sliderVal[sliderId] = parseInt(slider.value);
+          });
+          
+          // set default value
+          slider.value = sliderVal[count];
+          document.getElementById('value-slider-' + count).textContent = sliderVal[count];
+          count++;
+        });
+
+        var btnProcessSpecification = document.getElementById('btnProcessSpecification');
+        btnProcessSpecification.onclick = function() {
+          app.imageAfter.src = 'images/empty.png';
+          app.showImage(app.imageRaw);
+        };
 
       /*****************************************************************************
        *
@@ -381,21 +404,20 @@
                 // Nyoba regresi dengan 5 titik
                 var degree = 4;
                 var someData = [];
-                // var map_poly = new Map(), map_inverse_poly = new Map();
                 var x = 0;
-                var y = 10;
+                var y = sliderVal[0];
                 someData.push(new DataPoint(x, y));
                 x = 64;
-                y = 50;
+                y = sliderVal[1];
                 someData.push(new DataPoint(x, y));
                 x = 128;
-                y = 90;
+                y = sliderVal[2];
                 someData.push(new DataPoint(x, y));
                 x = 192;
-                y = 50;
+                y = sliderVal[3];
                 someData.push(new DataPoint(x, y));
                 x = 255;
-                y = 10;
+                y = sliderVal[4];
                 someData.push(new DataPoint(x, y));
 
                 var poly = new PolynomialRegression(someData, degree);
@@ -474,8 +496,8 @@
             cum_first[i] = Math.round(cum_first[i] * cum_second[255] / cum_first[255]);
           }
           
-          console.log(cum_first);
-          console.log(cum_second);
+          // console.log(cum_first);
+          // console.log(cum_second);
           
           var inverse_second = [];
           var last_val = 0;
