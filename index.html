@@ -99,37 +99,43 @@
   <hr>
 
   <span id="viewHistogram" hidden>
+    <div id="viewDesiredHistogram" class="row" hidden>
+      <div class="col s6 offset-s3 center">
+        <small>Desired Histogram</small>
+        <div id="histDesired" class="ct-chart ct-perfect-fourth xred"></div>
+      </div>
+    </div>
     <div class="row">
       <div class="col s6 center">
-        <small>Hist Red</small>
+        <small>Red Before</small>
         <div id="histRed" class="ct-chart ct-perfect-fourth xred"></div>
       </div>
       <div class="col s6 center">
-        <small>Cum Red</small>
+        <small>Red After</small>
         <div id="cumRed" class="ct-chart ct-perfect-fourth xred"></div>
       </div>
       <div class="col s6 center">
-        <small>Hist Green</small>
+        <small>Green Before</small>
         <div id="histGreen" class="ct-chart ct-perfect-fourth xgreen"></div>
       </div>
       <div class="col s6 center">
-        <small>Cum Green</small>
+        <small>Green After</small>
         <div id="cumGreen" class="ct-chart ct-perfect-fourth xgreen"></div>
       </div>
       <div class="col s6 center">
-        <small>Hist Blue</small>
+        <small>Blue Before</small>
         <div id="histBlue" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
       <div class="col s6 center">
-        <small>Cum Blue</small>
+        <small>Blue After</small>
         <div id="cumBlue" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
       <div class="col s6 center">
-        <small>Hist Grey</small>
+        <small>Grey Before</small>
         <div id="histGrey" class="ct-chart ct-perfect-fourth xgrey"></div>
       </div>
       <div class="col s6 center">
-        <small>Cum Grey</small>
+        <small>Grey After</small>
         <div id="cumGrey" class="ct-chart ct-perfect-fourth xgrey"></div>
       </div>
       <div class="col s12 center" hidden>
@@ -277,6 +283,7 @@
         var butCamera = document.getElementById("butCamera");
         var butGallery = document.getElementById("butGallery");
         var viewHistogram = document.getElementById("viewHistogram"); 
+        var viewDesiredHistogram = document.getElementById("viewDesiredHistogram");
         var inputHistogram = document.getElementById("inputHistogram");
 
         inputMode.addEventListener('change', function() {
@@ -379,6 +386,7 @@
               app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
               
               viewHistogram.style.display = "block";
+              viewDesiredHistogram.style.display = "none";
 
               // check mode
               if (app.mode == MODE_HIST_EQUAL) {
@@ -396,6 +404,7 @@
               } else if (app.mode == MODE_HIST_SPEC) {
 
                 inputHistogram.style.display = "block";
+                viewDesiredHistogram.style.display = "block";
 
                 app.calculateHistogram();
                 app.showHistogram();
@@ -473,6 +482,7 @@
                   };
 
                   new Chartist.Bar(second_bar_id[cnl], data, properties);
+                  new Chartist.Bar("#histDesired", data, properties);
 
                   app.showResultImage();
                   
