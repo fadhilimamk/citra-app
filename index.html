@@ -437,6 +437,15 @@
                   hist_spec.push(Math.round(poly.predictY(terms, i)));
                 }
 
+                var desired_data = {
+                  labels: [...Array(256).keys()],
+                  series: [
+                    hist_spec
+                  ]
+                };
+
+                new Chartist.Bar("#histDesired", desired_data, properties);
+
                 var second_bar_id = ['#cumRed', '#cumGreen', '#cumBlue', '#cumGrey'];
 
                 var hist_spec_sum = [];
@@ -482,7 +491,6 @@
                   };
 
                   new Chartist.Bar(second_bar_id[cnl], data, properties);
-                  new Chartist.Bar("#histDesired", data, properties);
 
                   app.showResultImage();
                   
