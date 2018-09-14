@@ -98,11 +98,58 @@
 
   <hr>
 
+  <span id="inputHistogram" hidden>
+    <div class="row center" style="margin-bottom:0px">
+      <div class="col s12">
+        <small>Set desired histogram:</small>
+      </div>
+      <div class="col s2 center" style="height: 70px; margin-top:50px">
+        <input id="slider-0" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
+      </div>
+      <div class="col s2 center" style="height: 70px; margin-top:50px">
+        <input id="slider-1" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
+      </div>
+      <div class="col s2 center" style="height: 70px; margin-top:50px">
+        <input id="slider-2" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
+      </div>
+      <div class="col s2 center" style="height: 70px; margin-top:50px">
+        <input id="slider-3" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
+      </div>
+      <div class="col s2 center" style="height: 70px; margin-top:50px">
+        <input id="slider-4" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col s2" style="padding:0px">
+        <small id="value-slider-0" class="right">10</small>
+      </div>
+      <div class="col s2" style="padding:0px">
+        <small id="value-slider-1" class="right">50</small>
+      </div>
+      <div class="col s2" style="padding:0px">
+        <small id="value-slider-2" class="right">90</small>
+      </div>
+      <div class="col s2" style="padding:0px">
+        <small id="value-slider-3" class="right">50</small>
+      </div>
+      <div class="col s2" style="padding:0px">
+        <small id="value-slider-4" class="right">10</small>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div class="col s12 center">
+        <a class="waves-effect waves-light btn blue darken-1" id="btnProcessSpecification">Process</a>
+      </div>
+    </div>
+  
+  </span>
+
   <span id="viewHistogram" hidden>
     <div id="viewDesiredHistogram" class="row" hidden>
       <div class="col s6 offset-s3 center">
         <small>Desired Histogram</small>
-        <div id="histDesired" class="ct-chart ct-perfect-fourth xred"></div>
+        <div id="histDesired" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
     </div>
     <div class="row">
@@ -147,52 +194,7 @@
 
   </span>
 
-  <span id="inputHistogram" hidden>
-      <div class="row center" style="margin-bottom:0px">
-        <div class="col s12">
-          <small>Set desired histogram:</small>
-        </div>
-        <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-0" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
-        </div>
-        <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-1" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
-        </div>
-        <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-2" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
-        </div>
-        <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-3" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
-        </div>
-        <div class="col s2 center" style="height: 70px; margin-top:50px">
-          <input id="slider-4" class='range vertical-heighest-first round' type='range' min='0' max='100' step='1' value='1'>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col s2" style="padding:0px">
-          <small id="value-slider-0" class="right">10</small>
-        </div>
-        <div class="col s2" style="padding:0px">
-          <small id="value-slider-1" class="right">50</small>
-        </div>
-        <div class="col s2" style="padding:0px">
-          <small id="value-slider-2" class="right">90</small>
-        </div>
-        <div class="col s2" style="padding:0px">
-          <small id="value-slider-3" class="right">50</small>
-        </div>
-        <div class="col s2" style="padding:0px">
-          <small id="value-slider-4" class="right">10</small>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col s12 center">
-          <a class="waves-effect waves-light btn blue darken-1" id="btnProcessSpecification">Process</a>
-        </div>
-      </div>
-
-  </span>
+  
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
   <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
