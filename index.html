@@ -68,6 +68,7 @@
         <select id="app-mode">
           <option value="equalization">Image Equalization</option>
           <option value="specification">Image Specification</option>
+          <option value="ocr">Character Detection</option>
         </select>
         <label>Select mode:</label>
       </div>
@@ -212,6 +213,7 @@
 
         const MODE_HIST_EQUAL = 0;
         const MODE_HIST_SPEC = 1;
+        const MODE_OCR = 2;
 
         var app = {
           isLoading: true,
@@ -294,8 +296,10 @@
           var mode = inputMode.options[inputMode.selectedIndex].value;
           if (mode === 'equalization') {
             app.mode = MODE_HIST_EQUAL;
-          } else {
+          } else if (mode == 'specification') {
             app.mode = MODE_HIST_SPEC;
+          } else {
+            app.mode = MODE_OCR;
           }
 
           // reset all after mode changed
@@ -352,6 +356,7 @@
             var sliderId = slider.id.split('-', 2)[1];
             document.getElementById("value-slider-" + sliderId).textContent = slider.value;
             sliderVal[sliderId] = parseInt(slider.value);
+            console.log(sliderVal);
           });
           
           // set default value
@@ -389,11 +394,12 @@
               app.imageCtx.drawImage(app.image, 0, 0, app.image.width, app.image.height);
               app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
               
-              viewHistogram.style.display = "block";
               viewDesiredHistogram.style.display = "none";
 
               // check mode
               if (app.mode == MODE_HIST_EQUAL) {
+
+                viewHistogram.style.display = "block";
                 
                 app.calculateHistogram();
                 app.showHistogram();
@@ -407,6 +413,7 @@
                 
               } else if (app.mode == MODE_HIST_SPEC) {
 
+                viewHistogram.style.display = "block";
                 inputHistogram.style.display = "block";
                 viewDesiredHistogram.style.display = "block";
 
@@ -500,6 +507,8 @@
                   
                 }
 
+              } else if (app.mode == MODE_OCR) {
+                alert("Under construction!");
               }
               
             }
