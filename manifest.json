@@ -1,0 +1,25 @@
+{
+    "name": "Citra Apps",
+    "short_name": "Citra",
+    "description": "Application to demonstrates various image processing method",
+    "start_url": "/",
+    "scope": ".",
+    "background_color": "#FFFFFF",
+    "theme_color": "#4A148C",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "dir": "ltr",
+    "lang": "en-US",
+    "icons": [
+      {
+        "src": "images/icons/icon-144x144.png",
+        "type": "image/png",
+        "sizes": "144x144"
+      },
+      {
+        "src": "images/icons/icon-192x192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      }
+    ]
+}

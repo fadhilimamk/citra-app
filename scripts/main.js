@@ -153,7 +153,6 @@
         var sliderId = slider.id.split('-', 2)[1];
         document.getElementById("value-slider-" + sliderId).textContent = slider.value;
         sliderVal[sliderId] = parseInt(slider.value);
-        console.log(sliderVal);
       });
       
       // set default value
@@ -323,9 +322,46 @@
     };
 
     app.processImageOCR = function() {
-        app.showResultImage();
-        alert('under construction!');
+
+      var form = document.createElement("form");
+
+      var imageInput = null;
+      if (inputImageCamera.src != null) {
+        imageInput = inputImageCamera;
+      } else {
+        imageInput = inputImageGallery;
+      }
+      form.appendChild(imageInput);
+      document.body.appendChild(form);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "https://citra-apps.herokuapp.com/process", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.responseType = "arraybuffer";
+
+      // Load result to image after
+      xhr.onload = function(e) {
+        if (this.status == 200) {
+          var uInt8Array = new Uint8Array(this.response);
+          var i = uInt8Array.length;
+          var binaryString = new Array(i);
+          while (i--) {
+            binaryString[i] = String.fromCharCode(uInt8Array[i]);
+          }
+          var data = binaryString.join('');
+          var base64 = window.btoa(data);
+      
+          app.imageAfter.src="data:image/png;base64,"+base64;
+        }
+      }
+
+      xhr.send(new FormData(form));
+
     };
+
+    function postImage() {
+      return false;
+    }
 
 
 
@@ -510,5 +546,26 @@
       ctx.putImageData(new ImageData(app.imageData, canvas.width, canvas.height), 0, 0);  
       app.imageAfter.src = canvas.toDataURL("img/png");
     }
+
+    if('serviceWorker' in navigator) {
+        navigator.serviceWorker
+        .register('scripts/service-worker.js')
+        .then(function() {
+          console.log("Service Worker registered successfully");
+        })
+        .catch(function() {
+          console.log("Service worker registration failed")
+        });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+        alert('This app can be installed!');
+        prompt();
+    });
 
 }());
