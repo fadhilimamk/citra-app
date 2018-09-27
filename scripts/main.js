@@ -13,6 +13,9 @@
     const MODE_OCR = 2;
     const MODE_THINNING = 3;
 
+    const COLOR_WHITE = 255;
+    const COLOR_BLACK = 0;
+
     var app = {
       isLoading: true,
       image: document.getElementById("imgBefore"),
@@ -35,8 +38,12 @@
     var g_cum = [], g_map = [];
     var b_cum = [], b_map = [];
     var image_size;
-
     var first_cum;
+
+    function Point(x, y) {
+      this.x = x;
+      this.y = y;
+    }
 
     // global var for histogram
     var properties, responsiveOptions;
@@ -366,7 +373,75 @@
 
     // Main function to handle image thinning
     app.processImageThinning = function() {
-      alert("thinning!");
+      var threshold = 100;
+      
+      // Ubah gambar menjadi black-white
+      for (var i = 0, n = app.imageData.length; i < n; i+= 4) {
+        var red = app.imageData[i];
+        var green = app.imageData[i+1];
+        var blue = app.imageData[i+2];
+        var greyscale = Math.round((red+green+blue)/3)
+
+        if (greyscale < threshold) {
+          app.imageData[i] = COLOR_BLACK;
+          app.imageData[i+1] = COLOR_BLACK;
+          app.imageData[i+2] = COLOR_BLACK;
+        } else {
+          app.imageData[i] = COLOR_WHITE;
+          app.imageData[i+1] = COLOR_WHITE;
+          app.imageData[i+2] = COLOR_WHITE;
+        }
+        app.imageData[i+3] = 255;
+      }
+
+      app.showResultImage();
+
+      // Lakukan algoritma Zhang Suen
+      var firstStep = false;
+      var hasChanged;
+      var toWhite = new Array();
+
+      var process_count = 0;
+
+      do {
+        console.log("processing ...");
+        hasChanged = false;
+        firstStep = !firstStep;
+
+        for (var row = 1; row < app.image.height-2; row++) {
+          for (var column = 1; column < app.image.width-2; column++) {
+            var offset = (app.image.width * row + column)*4;
+            if (app.imageData[offset] != 0)
+              continue;
+            var nn = app.countBlackNighbors(row, column);
+            if (nn < 2 || nn > 6)
+              continue;
+            if (app.countTransition(row, column) != 1)
+              continue;
+            if (!app.atLeastOneIsWhite(row, column, firstStep ? 0 : 1))
+              continue;
+            
+            toWhite.push(new Point(column, row));
+            hasChanged = true;
+            
+          }
+        }
+
+        for (let i = 0; i < toWhite.length; i++) {
+          var p = toWhite[i];
+          var offset = (p.x * app.image.width + p.y)*4;
+          app.imageData[offset] = COLOR_WHITE;
+          app.imageData[offset+1] = COLOR_WHITE;
+          app.imageData[offset+2] = COLOR_WHITE;
+        }
+
+        toWhite = new Array();
+        process_count++;
+
+      } while (firstStep || hasChanged);
+
+      app.showResultImage();
+
     }
 
 
@@ -376,6 +451,76 @@
    * Another function for image processing
    *
    ****************************************************************************/
+   
+   var nbrs = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]];
+   var nbrGroups = [[[0, 2, 4], [2, 4, 6]], [[0, 2, 6], [0, 4, 6]]];
+
+   // Menghitung jumlah tetangga yang berwarna putih 
+   app.countBlackNighbors = function(row, column) {
+      var count = 0;
+
+      for (var i = 0; i < nbrs.length-1; i++) {
+        var r = row + nbrs[i][1];
+        var c = column + nbrs[i][0];
+
+        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+          continue;
+        }
+
+        var offset = (app.image.width * r + c)*4;
+        if (app.imageData[offset] == COLOR_BLACK) {
+          count++;
+        }
+
+      }
+
+      return count;
+    }
+
+    app.countTransition = function(row, column) {
+      var count = 0;
+
+      for (var i = 0; i < nbrs.length-1; i++) {
+        var r = row + nbrs[i][1];
+        var c = column + nbrs[i][0];
+
+        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+          continue;
+        }
+
+        var offset = (app.image.width * r + c)*4;
+        if (app.imageData[offset] == COLOR_WHITE) {
+          r = row + nbrs[i+1][1];
+          c = column + nbrs[i+1][0];
+          offset = (app.image.width * r + c)*4;
+          if (app.imageData[offset] == COLOR_BLACK) {
+            count++;
+          }
+        }
+
+      }
+
+      return count;
+    }
+
+    app.atLeastOneIsWhite = function(row, column, step) {
+      var count = 0;
+      var group = nbrGroups[step];
+
+      for (var i = 0; i < 2; i++)
+        for (var j = 0; j < group[i].length; j++) {
+            var nbr = nbrs[group[i][j]];
+            var r = row + nbr[1];
+            var c = column + nbr[0];
+            var offset = (app.image.width * r + c)*4;
+            if (app.imageData[offset] == COLOR_WHITE) {
+                count++;
+                break;
+            }
+        }
+
+      return count > 1;
+    }
 
     app.getHistSpecArr = function(cum_first, cum_second) {
       
