@@ -11,6 +11,7 @@
     const MODE_HIST_EQUAL = 0;
     const MODE_HIST_SPEC = 1;
     const MODE_OCR = 2;
+    const MODE_THINNING = 3;
 
     var app = {
       isLoading: true,
@@ -95,8 +96,10 @@
         app.mode = MODE_HIST_EQUAL;
       } else if (mode == 'specification') {
         app.mode = MODE_HIST_SPEC;
-      } else {
+      } else if (mode == 'ocr') {
         app.mode = MODE_OCR;
+      } else {
+        app.mode = MODE_THINNING;
       }
 
       // reset all after mode changed
@@ -199,6 +202,8 @@
                 app.processImageSpecification();
           } else if (app.mode == MODE_OCR) {
                 app.processImageOCR();
+          } else if (app.mode == MODE_THINNING) {
+                app.processImageThinning();
           }
           
         }
@@ -359,8 +364,9 @@
 
     };
 
-    function postImage() {
-      return false;
+    // Main function to handle image thinning
+    app.processImageThinning = function() {
+      alert("thinning!");
     }
 
 
