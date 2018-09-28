@@ -373,72 +373,126 @@
 
     // Main function to handle image thinning
     app.processImageThinning = function() {
+      var ZhangSuen = {};
+      ZhangSuen.grid = Array(app.image.height);
       var threshold = 100;
       
       // Ubah gambar menjadi black-white
+      var row = 0, column = 0;
       for (var i = 0, n = app.imageData.length; i < n; i+= 4) {
         var red = app.imageData[i];
         var green = app.imageData[i+1];
         var blue = app.imageData[i+2];
         var greyscale = Math.round((red+green+blue)/3)
 
+        if (column == 0) {
+          ZhangSuen.grid[row] = Array();
+        }
+
         if (greyscale < threshold) {
           app.imageData[i] = COLOR_BLACK;
           app.imageData[i+1] = COLOR_BLACK;
           app.imageData[i+2] = COLOR_BLACK;
+          ZhangSuen.grid[row].push(COLOR_BLACK);
         } else {
           app.imageData[i] = COLOR_WHITE;
           app.imageData[i+1] = COLOR_WHITE;
           app.imageData[i+2] = COLOR_WHITE;
+          ZhangSuen.grid[row].push(COLOR_WHITE);
         }
         app.imageData[i+3] = 255;
+
+        column++;
+        if (column == app.image.width) {
+          column = 0;
+          row++;
+        }
+
       }
 
       app.showResultImage();
+      
+      ZhangSuen.nbrs = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]];
+      ZhangSuen.nbrGroups = [[[0, 2, 4], [2, 4, 6]], [[0, 2, 6], [0, 4, 6]]];
+      ZhangSuen.toWhite = new Array();
 
-      // Lakukan algoritma Zhang Suen
+      ZhangSuen.numNeighbors = function (r, c) {
+        var count = 0;
+        for (var i = 0; i < ZhangSuen.nbrs.length - 1; i++)
+            if (ZhangSuen.grid[r + ZhangSuen.nbrs[i][1]][c + ZhangSuen.nbrs[i][0]] === COLOR_BLACK)
+                count++;
+        return count;
+      };
+      ZhangSuen.numTransitions = function (r, c) {
+          var count = 0;
+          for (var i = 0; i < ZhangSuen.nbrs.length - 1; i++)
+              if (ZhangSuen.grid[r + ZhangSuen.nbrs[i][1]][c + ZhangSuen.nbrs[i][0]] === COLOR_WHITE) {
+                  if (ZhangSuen.grid[r + ZhangSuen.nbrs[i + 1][1]][c + ZhangSuen.nbrs[i + 1][0]] === COLOR_BLACK)
+                      count++;
+              }
+          return count;
+      };
+      ZhangSuen.atLeastOneIsWhite = function (r, c, step) {
+          var count = 0;
+          var group = ZhangSuen.nbrGroups[step];
+          for (var i = 0; i < 2; i++)
+              for (var j = 0; j < group[i].length; j++) {
+                  var nbr = ZhangSuen.nbrs[group[i][j]];
+                  if (ZhangSuen.grid[r + nbr[1]][c + nbr[0]] === COLOR_WHITE) {
+                      count++;
+                      break;
+                  }
+              }
+          return count > 1;
+      };
+      ZhangSuen.printResult = function () {
+        for (var i = 0; i < ZhangSuen.grid.length; i++) {
+            var row = ZhangSuen.grid[i];
+            console.log(row.join(''));
+        }
+      };  
+
       var firstStep = false;
       var hasChanged;
-      var toWhite = new Array();
-
-      var process_count = 0;
-
       do {
-        console.log("processing ...");
-        hasChanged = false;
-        firstStep = !firstStep;
-
-        for (var row = 1; row < app.image.height-2; row++) {
-          for (var column = 1; column < app.image.width-2; column++) {
-            var offset = (app.image.width * row + column)*4;
-            if (app.imageData[offset] != 0)
-              continue;
-            var nn = app.countBlackNighbors(row, column);
-            if (nn < 2 || nn > 6)
-              continue;
-            if (app.countTransition(row, column) != 1)
-              continue;
-            if (!app.atLeastOneIsWhite(row, column, firstStep ? 0 : 1))
-              continue;
-            
-            toWhite.push(new Point(column, row));
-            hasChanged = true;
-            
+          hasChanged = false;
+          firstStep = !firstStep;
+          for (var r = 1; r < ZhangSuen.grid.length - 1; r++) {
+              for (var c = 1; c < ZhangSuen.grid[0].length - 1; c++) {
+                  if (ZhangSuen.grid[r][c] !== COLOR_BLACK)
+                      continue;
+                  var nn = ZhangSuen.numNeighbors(r, c);
+                  if (nn < 2 || nn > 6)
+                      continue;
+                  if (ZhangSuen.numTransitions(r, c) !== 1)
+                      continue;
+                  if (!ZhangSuen.atLeastOneIsWhite(r, c, firstStep ? 0 : 1))
+                      continue;
+                  ZhangSuen.toWhite.push(new Point(c, r));
+                  hasChanged = true;
+              }
+          }
+          for (let i = 0; i < ZhangSuen.toWhite.length; i++) {
+              var p = ZhangSuen.toWhite[i];
+              ZhangSuen.grid[p.y][p.x] = COLOR_WHITE;
+          }
+          ZhangSuen.toWhite = new Array();
+      } while ((firstStep || hasChanged));
+      
+      for (var r = 0; r < app.image.height; r++) {
+        for (var c = 0; c < app.image.width; c++) {
+          var offset = (app.image.width*r + c)*4;
+          if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
+            app.imageData[offset] = COLOR_WHITE;
+            app.imageData[offset+1] = COLOR_WHITE;
+            app.imageData[offset+2] = COLOR_WHITE;
+          } else {
+            app.imageData[offset] = COLOR_BLACK;
+            app.imageData[offset+1] = COLOR_BLACK;
+            app.imageData[offset+2] = COLOR_BLACK;
           }
         }
-
-        for (let i = 0; i < toWhite.length; i++) {
-          var p = toWhite[i];
-          var offset = (p.x * app.image.width + p.y)*4;
-          app.imageData[offset] = COLOR_WHITE;
-          app.imageData[offset+1] = COLOR_WHITE;
-          app.imageData[offset+2] = COLOR_WHITE;
-        }
-
-        toWhite = new Array();
-        process_count++;
-
-      } while (firstStep || hasChanged);
+      }
 
       app.showResultImage();
 
