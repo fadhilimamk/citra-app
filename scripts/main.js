@@ -15,6 +15,50 @@
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
+    const COLOR_DONT_CARE = 99;
+
+    var B1 = [
+      [COLOR_DONT_CARE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_DONT_CARE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B2 = [
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_DONT_CARE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B3 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_DONT_CARE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_DONT_CARE]
+    ]
+    var B4 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_DONT_CARE]
+    ]
+    var B5 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B6 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B7 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var B8 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    
+    var B = [B1, B2, B3, B4, B5, B6, B7, B8];
 
     var app = {
       isLoading: true,
@@ -25,7 +69,8 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
-      mode: MODE_HIST_EQUAL
+      mode: MODE_THINNING
+      // mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
     };
@@ -371,6 +416,117 @@
 
     };
 
+    app.getPixelValue = function(x, y) {
+      var arr = Array(4);
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        arr.push(app.imageData[offset+i]);
+      }
+
+      return arr;
+    }
+
+    app.getPixelValue = function (x, y) {
+      var arr = Array(4);
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        arr.push(app.imageData[offset + i]);
+      }
+
+      return arr;
+    }
+
+    app.setPixelValue = function (x, y, val) {
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        app.imageData[offset + i] = val[i];
+      }
+    }
+
+    app.findEndPoints = function (grid) {
+
+      // for (var r = 0; r < app.image.height; ++r) {
+      //   for (var c = 0; c < app.image.width; ++c) {
+      //     if (grid[r][c] == COLOR_BLACK) {
+      //       grid[r][c] == COLOR_WHITE;
+      //     } else {
+      //       grid[r][c] == COLOR_BLACK;
+      //     }
+      //   }
+      // }
+
+      console.log("Nyoba Grid");
+
+      var str = "";
+
+      for (var r = 0; r < app.image.height; r++) {
+        for (var c = 0; c < app.image.width; c++) {
+          if (grid[r][c] == COLOR_WHITE) {
+            str += " ";
+          } else {
+            str += "#"
+          }
+        }
+        console.log(str);
+        str = "";
+      }
+
+      var EndPoints = {};
+      EndPoints.grid = Array(app.image.height);
+
+
+      for (var r = 0; r < app.image.height; ++r) {
+        EndPoints.grid[r] = Array(app.image.width);
+        for (var c = 0; c < app.image.width; ++c) {
+          EndPoints.grid[r].push(COLOR_BLACK);
+        }
+      }
+
+      EndPoints.match3x3Array = function(X, Y) {
+        var cek = true;
+        for (var r = 0; r < 3 && cek; r++) {
+          for (var c = 0; c < 3 && cek; c++) {
+            if (X[r][c] == COLOR_DONT_CARE) {
+              continue
+            } else {
+              if (X[r][c] != Y[r][c]) {
+                cek = false;
+              }
+            }
+          }
+        }
+        return cek;
+      }
+
+      for (var r = 1; r < app.image.height-1; ++r) {
+        for (var c = 1; c < app.image.width-1; ++c) {
+          var last_point = false;
+          var arr = [
+            [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
+            [grid[r][c-1], grid[r][c], grid[r][c+1]],
+            [grid[r+1][c-1], grid[r+1][c], grid[r+1][c+1]]
+          ]
+
+          B.forEach(function (element) {
+            var is_equal = EndPoints.match3x3Array(element, arr);
+            if (is_equal) {
+              last_point = true
+            }
+          });
+
+          if (last_point) {
+            EndPoints.grid[r][c] = COLOR_WHITE;
+          }
+          
+        }
+      }
+
+      // EndPoints.grid[2][2] = COLOR_WHITE;
+
+      return EndPoints.grid;
+
+    }
+
     // Main function to handle image thinning
     app.processImageThinning = function() {
       var ZhangSuen = {};
@@ -479,19 +635,54 @@
           ZhangSuen.toWhite = new Array();
       } while ((firstStep || hasChanged));
       
+      var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
+      var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
+
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
-          var offset = (app.image.width*r + c)*4;
+          // var offset = (app.image.width*r + c)*4;
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
-            app.imageData[offset] = COLOR_WHITE;
-            app.imageData[offset+1] = COLOR_WHITE;
-            app.imageData[offset+2] = COLOR_WHITE;
+            app.setPixelValue(c, r, WHITE);
+            // app.imageData[offset] = COLOR_WHITE;
+            // app.imageData[offset+1] = COLOR_WHITE;
+            // app.imageData[offset+2] = COLOR_WHITE;
           } else {
-            app.imageData[offset] = COLOR_BLACK;
-            app.imageData[offset+1] = COLOR_BLACK;
-            app.imageData[offset+2] = COLOR_BLACK;
+            app.setPixelValue(c, r, BLACK);
+            // app.imageData[offset] = COLOR_BLACK;
+            // app.imageData[offset+1] = COLOR_BLACK;
+            // app.imageData[offset+2] = COLOR_BLACK;
           }
         }
+      }
+
+      for (var r = 0; r < app.image.height; ++r) {
+        for (var c = 0; c < app.image.width; ++c) {
+          if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
+            ZhangSuen.grid[r][c] = COLOR_WHITE;
+          } else {
+            ZhangSuen.grid[r][c] = COLOR_BLACK;
+          }
+        }
+      }
+      
+      var grid = app.findEndPoints(ZhangSuen.grid);
+      
+      // Cetak Gambar di Console
+      console.log(app.image.height);
+      console.log(app.image.width);
+      var str = "";
+
+      for (var r = 0; r < app.image.height; r++) {
+        for (var c = 0; c < app.image.width; c++) {
+          var offset = (app.image.width * r + c) * 4;
+          if (grid[r][c] == COLOR_WHITE) {
+            str += " ";
+          } else {
+            str += "#"
+          }
+        }
+        console.log(str);
+        str = "";
       }
 
       app.showResultImage();
