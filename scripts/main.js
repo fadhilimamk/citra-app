@@ -922,6 +922,9 @@
       console.log("Line Junctions");
       console.log(lineJunctions);
 
+      var digit = app.classify(lineJunctions, endPoints);
+      console.log(digit);
+
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
@@ -935,6 +938,52 @@
       app.showResultImage();
 
     }
+
+    app.classify = function (intersection_list, endpoint_list) {
+      // console.log(endpoint_list.length);
+      // console.log(intersection_list.length);
+      if (endpoint_list.length == 0) {
+        if (intersection_list.length == 0) {
+          return 0;
+        }
+        else {
+          return 8;
+        }
+      }
+      else if (endpoint_list.length == 1) {
+        if (intersection_list[0][0] < endpoint_list[0][0]) { // x intersection di atas
+          return 9;
+        }
+        else {
+          return 6;
+        }
+      }
+      else if (endpoint_list.length == 2) {
+        if (intersection_list.length == 1) {
+          return 4;
+        }
+        else {
+          if (endpoint_list[0][1] < 60) {
+            if (endpoint_list[1][1] > 90) {
+              return 2;
+            } else {
+              return 7;
+            }
+          }
+          else {
+            return 5;
+          }
+        }
+      }
+      else {
+        if (endpoint_list[2][0] - intersection_list[0][0] < 10) {
+          return 1;
+        }
+        else {
+          return 3;
+        }
+      }
+    };
 
 
 
