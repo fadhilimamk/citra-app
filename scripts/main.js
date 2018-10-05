@@ -145,8 +145,13 @@
       [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
       [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
     ]
+    var L18 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK]
+    ]
 
-    var L = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17];
+    var L = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18];
 
     var app = {
       isLoading: true,
