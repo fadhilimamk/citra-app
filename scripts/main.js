@@ -15,6 +15,138 @@
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
+    const COLOR_DONT_CARE = 99;
+
+    var B1 = [
+      [COLOR_DONT_CARE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_DONT_CARE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B2 = [
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_DONT_CARE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B3 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_DONT_CARE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_DONT_CARE]
+    ]
+    var B4 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_DONT_CARE]
+    ]
+    var B5 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B6 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var B7 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var B8 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    
+    var B = [B1, B2, B3, B4, B5, B6, B7, B8];
+
+    var L1 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK]
+    ]
+    var L2 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var L3 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L4 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK]
+    ]
+    var L5 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L6 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK]
+    ]
+    var L7 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var L8 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L9 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L10 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var L11 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L12 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L13 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L14 = [
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
+    ]
+    var L15 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_WHITE]
+    ]
+    var L16 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+    var L17 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_WHITE]
+    ]
+
+    var L = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17];
 
     var app = {
       isLoading: true,
@@ -25,6 +157,7 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
+      // mode: MODE_THINNING
       mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
@@ -280,8 +413,8 @@
         };
 
         new Chartist.Bar("#histDesired", desired_data, properties);
-
         var second_bar_id = ['#cumRed', '#cumGreen', '#cumBlue', '#cumGrey'];
+
 
         var hist_spec_sum = [];
         var sum = 0;
@@ -370,6 +503,263 @@
       xhr.send(new FormData(form));
 
     };
+
+    app.getPixelValue = function(x, y) {
+      var arr = Array(4);
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        arr.push(app.imageData[offset+i]);
+      }
+
+      return arr;
+    }
+
+    app.getPixelValue = function (x, y) {
+      var arr = Array(4);
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        arr.push(app.imageData[offset + i]);
+      }
+
+      return arr;
+    }
+
+    app.setPixelValue = function (x, y, val) {
+      var offset = (app.image.width * y + x) * 4;
+      for (var i = 0; i < 4; ++i) {
+        app.imageData[offset + i] = val[i];
+      }
+    }
+
+
+    app.removeEndPoints = function (grid) {
+      var removedPoints = app.findEndPoints(grid);
+
+      for (var r = 1; r < app.image.height - 1; ++r) {
+        for (var c = 1; c < app.image.width - 1; ++c) {
+          if (removedPoints[r][c] == COLOR_WHITE) {
+            grid[r][c] = COLOR_BLACK;
+          }
+        }
+      }
+    }
+
+    app.dilateEndPoints = function (grid, initialMatrix) {
+      var dilatedPoints = app.findEndPoints(grid);
+
+      // console.log("Dilated points")
+      // app.printGridInConsole(dilatedPoints);
+
+      for (var r = 1; r < app.image.height - 1; ++r) {
+        for (var c = 1; c < app.image.width - 1; ++c) {
+          if (dilatedPoints[r][c] == COLOR_WHITE) {
+            for (var i = -1; i < 2; ++i) {
+              for (var j = -1; j < 2; ++j) {
+                if (initialMatrix[r+i][c+j] == COLOR_WHITE) {
+                  grid[r][c] = COLOR_WHITE;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    app.copyGrid = function (grid) {
+
+      var EndPoints = {};
+      EndPoints.grid = Array(app.image.height);
+
+      for (var r = 0; r < app.image.height; ++r) {
+        EndPoints.grid[r] = Array(app.image.width);
+        for (var c = 0; c < app.image.width; ++c) {
+          EndPoints.grid[r].push(grid[r][c]);
+        }
+      }
+
+      for (var r = 0; r < app.image.height; ++r) {
+        for (var c = 0; c < app.image.width; ++c) {
+          if (grid[r][c] == COLOR_WHITE) {
+            EndPoints.grid[r][c] = COLOR_WHITE;
+          }
+        }
+      }
+
+      return EndPoints.grid;
+    }
+
+    app.findEndPoints = function (grid) {
+
+      var EndPoints = {};
+      EndPoints.grid = Array(app.image.height);
+
+      for (var r = 0; r < app.image.height; ++r) {
+        EndPoints.grid[r] = Array(app.image.width);
+        for (var c = 0; c < app.image.width; ++c) {
+          EndPoints.grid[r].push(COLOR_BLACK);
+        }
+      }
+
+      EndPoints.match3x3Array = function(X, Y) {
+        var cek = true;
+        for (var r = 0; r < 3 && cek; r++) {
+          for (var c = 0; c < 3 && cek; c++) {
+            if (X[r][c] == COLOR_DONT_CARE) {
+              continue
+            } else {
+              if (X[r][c] != Y[r][c]) {
+                cek = false;
+              }
+            }
+          }
+        }
+        return cek;
+      }
+
+      for (var r = 1; r < app.image.height-1; ++r) {
+        for (var c = 1; c < app.image.width-1; ++c) {
+          var last_point = false;
+          var arr = [
+            [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
+            [grid[r][c-1], grid[r][c], grid[r][c+1]],
+            [grid[r+1][c-1], grid[r+1][c], grid[r+1][c+1]]
+          ]
+
+          B.forEach(function (element) {
+            var is_equal = EndPoints.match3x3Array(element, arr);
+            if (is_equal) {
+              last_point = true
+            }
+          });
+
+          if (last_point) {
+            EndPoints.grid[r][c] = COLOR_WHITE;
+          }
+        }
+      }
+
+      return EndPoints.grid;
+    }
+
+
+    app.findLineJunctions = function (grid) {
+
+      var LineJunctions = {};
+      LineJunctions.grid = Array(app.image.height);
+
+      for (var r = 0; r < app.image.height; ++r) {
+        LineJunctions.grid[r] = Array(app.image.width);
+        for (var c = 0; c < app.image.width; ++c) {
+          LineJunctions.grid[r].push(COLOR_BLACK);
+        }
+      }
+
+      LineJunctions.match3x3Array = function(X, Y) {
+        var cek = true;
+        for (var r = 0; r < 3 && cek; r++) {
+          for (var c = 0; c < 3 && cek; c++) {
+            if (X[r][c] != Y[r][c]) {
+              cek = false;
+            }
+          }
+        }
+        return cek;
+      }
+
+      for (var r = 1; r < app.image.height-1; ++r) {
+        for (var c = 1; c < app.image.width-1; ++c) {
+          var last_point = false;
+          var arr = [
+            [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
+            [grid[r][c-1], grid[r][c], grid[r][c+1]],
+            [grid[r+1][c-1], grid[r+1][c], grid[r+1][c+1]]
+          ]
+
+          L.forEach(function (element) {
+            var is_equal = LineJunctions.match3x3Array(element, arr);
+            if (is_equal) {
+              last_point = true
+            }
+          });
+
+          if (last_point) {
+            LineJunctions.grid[r][c] = COLOR_WHITE;
+          }
+        }
+      }
+
+      return LineJunctions.grid;
+    }
+
+    app.getWhitePointFromGrid = function(grid) {
+      var list = []
+      for (var r = 0; r < app.image.height; ++r) {
+        for (var c = 0; c < app.image.width; ++c) {
+          if (grid[r][c] == COLOR_WHITE) {
+            list.push([r, c]);
+          }
+        }
+      }
+      return list;
+    }
+
+    app.thinning = function (grid) {
+
+      var Thinning = {};
+
+      Thinning.match3x3Array = function (X, Y) {
+        var cek = true;
+        for (var r = 0; r < 3 && cek; r++) {
+          for (var c = 0; c < 3 && cek; c++) {
+            if (X[r][c] != Y[r][c]) {
+              cek = false;
+            }
+          }
+        }
+        return cek;
+      }
+
+      for (var r = 1; r < app.image.height - 1; ++r) {
+        for (var c = 1; c < app.image.width - 1; ++c) {
+          var thin_point = false;
+          var arr = [
+            [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
+            [grid[r][c - 1], grid[r][c], grid[r][c + 1]],
+            [grid[r + 1][c - 1], grid[r + 1][c], grid[r + 1][c + 1]]
+          ]
+
+          C.forEach(function (element) {
+            var is_equal = Thinning.match3x3Array(element, arr);
+            if (is_equal) {
+              thin_point = true
+            }
+          });
+
+          if (thin_point) {
+            grid[r][c] = COLOR_BLACK;
+          }
+        }
+      }
+    }
+
+    // Cetak Gambar di Console
+    app.printGridInConsole = function(grid) {
+
+      var str = "";
+
+      for (var r = 0; r < app.image.height; r++) {
+        for (var c = 0; c < app.image.width; c++) {
+          var offset = (app.image.width * r + c) * 4;
+          if (grid[r][c] == COLOR_WHITE) {
+            str += " ";
+          } else {
+            str += "#"
+          }
+        }
+        console.log(str);
+        str = "";
+      }
+    }
 
     // Main function to handle image thinning
     app.processImageThinning = function() {
@@ -479,17 +869,65 @@
           ZhangSuen.toWhite = new Array();
       } while ((firstStep || hasChanged));
       
+      var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
+      var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
+
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
-          var offset = (app.image.width*r + c)*4;
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
-            app.imageData[offset] = COLOR_WHITE;
-            app.imageData[offset+1] = COLOR_WHITE;
-            app.imageData[offset+2] = COLOR_WHITE;
+            app.setPixelValue(c, r, WHITE);
           } else {
-            app.imageData[offset] = COLOR_BLACK;
-            app.imageData[offset+1] = COLOR_BLACK;
-            app.imageData[offset+2] = COLOR_BLACK;
+            app.setPixelValue(c, r, BLACK);
+          }
+        }
+      }
+
+      for (var r = 0; r < app.image.height; ++r) {
+        for (var c = 0; c < app.image.width; ++c) {
+          if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
+            ZhangSuen.grid[r][c] = COLOR_WHITE;
+          } else {
+            ZhangSuen.grid[r][c] = COLOR_BLACK;
+          }
+        }
+      }
+
+      var initialMatrix = app.copyGrid(ZhangSuen.grid);
+      
+      var n = 10;
+      // console.log("Print Grid");
+      // app.printGridInConsole(ZhangSuen.grid);
+      for (var i = 0; i < n; ++i) {
+        // console.log("Remove Grid", i);
+        app.removeEndPoints(ZhangSuen.grid);
+        // app.printGridInConsole(ZhangSuen.grid);
+      }
+
+      // console.log("Initial Matrix");
+      // app.printGridInConsole(initialMatrix);
+      for (var i = 0; i < n; ++i) {
+        // console.log("Dilate Grid", i);
+        app.dilateEndPoints(ZhangSuen.grid, initialMatrix);
+        // app.printGridInConsole(ZhangSuen.grid);
+      }
+      
+      // app.findEndPoints(initialMatrix);
+
+      app.printGridInConsole(ZhangSuen.grid);
+
+      var lineJunctions = app.getWhitePointFromGrid(app.findLineJunctions(ZhangSuen.grid));
+      var endPoints = app.getWhitePointFromGrid(app.findEndPoints(ZhangSuen.grid));
+      console.log("End Points");
+      console.log(endPoints);
+      console.log("Line Junctions");
+      console.log(lineJunctions);
+
+      for (var r = 0; r < app.image.height; r++) {
+        for (var c = 0; c < app.image.width; c++) {
+          if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
+            app.setPixelValue(c, r, WHITE);
+          } else {
+            app.setPixelValue(c, r, BLACK);
           }
         }
       }
