@@ -188,8 +188,8 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
-      mode: MODE_THINNING
-      // mode: MODE_HIST_EQUAL
+      // mode: MODE_THINNING
+      mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
     };
