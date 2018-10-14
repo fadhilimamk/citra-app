@@ -60,6 +60,8 @@
     
     var B = [B1, B2, B3, B4, B5, B6, B7, B8];
 
+
+    // LINE JUNCTION PATTERN
     var L1 = [
       [COLOR_WHITE, COLOR_BLACK, COLOR_WHITE],
       [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
@@ -152,6 +154,30 @@
     ]
 
     var L = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18];
+
+    // DOUBLED LINE PATTERN
+    var D1 = [
+      [COLOR_BLACK, COLOR_WHITE, COLOR_DONT_CARE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_DONT_CARE],
+      [COLOR_DONT_CARE, COLOR_DONT_CARE, COLOR_DONT_CARE]
+    ]
+    var D2 = [
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_DONT_CARE, COLOR_DONT_CARE, COLOR_DONT_CARE]
+    ]
+    var D3 = [
+      [COLOR_DONT_CARE, COLOR_DONT_CARE, COLOR_DONT_CARE],
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_WHITE],
+      [COLOR_DONT_CARE, COLOR_WHITE, COLOR_BLACK]
+    ]
+    var D4 = [
+      [COLOR_DONT_CARE, COLOR_DONT_CARE, COLOR_DONT_CARE],
+      [COLOR_WHITE, COLOR_WHITE, COLOR_DONT_CARE],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_DONT_CARE]
+    ]
+
+    var D = [D1, D2, D3, D4];
 
     var app = {
       isLoading: true,
@@ -606,22 +632,6 @@
         }
       }
 
-      EndPoints.match3x3Array = function(X, Y) {
-        var cek = true;
-        for (var r = 0; r < 3 && cek; r++) {
-          for (var c = 0; c < 3 && cek; c++) {
-            if (X[r][c] == COLOR_DONT_CARE) {
-              continue
-            } else {
-              if (X[r][c] != Y[r][c]) {
-                cek = false;
-              }
-            }
-          }
-        }
-        return cek;
-      }
-
       for (var r = 1; r < app.image.height-1; ++r) {
         for (var c = 1; c < app.image.width-1; ++c) {
           var last_point = false;
@@ -632,7 +642,7 @@
           ]
 
           B.forEach(function (element) {
-            var is_equal = EndPoints.match3x3Array(element, arr);
+            var is_equal = app.match3x3Array(element, arr);
             if (is_equal) {
               last_point = true
             }
@@ -645,6 +655,22 @@
       }
 
       return EndPoints.grid;
+    }
+
+    app.match3x3Array = function (X, Y) {
+      var cek = true;
+      for (var r = 0; r < 3 && cek; r++) {
+        for (var c = 0; c < 3 && cek; c++) {
+          if (X[r][c] == COLOR_DONT_CARE) {
+            continue
+          } else {
+            if (X[r][c] != Y[r][c]) {
+              cek = false;
+            }
+          }
+        }
+      }
+      return cek;
     }
 
 
@@ -660,18 +686,6 @@
         }
       }
 
-      LineJunctions.match3x3Array = function(X, Y) {
-        var cek = true;
-        for (var r = 0; r < 3 && cek; r++) {
-          for (var c = 0; c < 3 && cek; c++) {
-            if (X[r][c] != Y[r][c]) {
-              cek = false;
-            }
-          }
-        }
-        return cek;
-      }
-
       for (var r = 1; r < app.image.height-1; ++r) {
         for (var c = 1; c < app.image.width-1; ++c) {
           var last_point = false;
@@ -682,7 +696,7 @@
           ]
 
           L.forEach(function (element) {
-            var is_equal = LineJunctions.match3x3Array(element, arr);
+            var is_equal = app.match3x3Array(element, arr);
             if (is_equal) {
               last_point = true
             }
@@ -695,6 +709,40 @@
       }
 
       return LineJunctions.grid;
+    }
+    
+
+    app.removeDoubledLine = function(grid, exceptional_point) {
+      for (var r = 1; r < app.image.height - 1; ++r) {
+        for (var c = 1; c < app.image.width - 1; ++c) {
+          var doubled_point = false;
+          var arr = [
+            [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
+            [grid[r][c - 1], grid[r][c], grid[r][c + 1]],
+            [grid[r + 1][c - 1], grid[r + 1][c], grid[r + 1][c + 1]]
+          ]
+
+          D.forEach(function (mat) {
+            var is_equal = app.match3x3Array(mat, arr);
+            if (is_equal) {
+              doubled_point = true
+              // console.log("PRINT");
+            }
+          });
+          
+          exceptional_point.forEach(function (point) {
+            if (r - 1 <= point[0] && point[0] <= r + 1 && c - 1 <= point[1] && point[1] <= c+1) {
+              doubled_point = false;
+              // console.log("EXCEPTIONAL");
+              // grid[r][c] = COLOR_DONT_CARE;
+            }
+          });
+
+          if (doubled_point) {
+            grid[r][c] = COLOR_BLACK;
+          }
+        }
+      }
     }
 
     app.getWhitePointFromGrid = function(grid) {
@@ -711,20 +759,6 @@
 
     app.thinning = function (grid) {
 
-      var Thinning = {};
-
-      Thinning.match3x3Array = function (X, Y) {
-        var cek = true;
-        for (var r = 0; r < 3 && cek; r++) {
-          for (var c = 0; c < 3 && cek; c++) {
-            if (X[r][c] != Y[r][c]) {
-              cek = false;
-            }
-          }
-        }
-        return cek;
-      }
-
       for (var r = 1; r < app.image.height - 1; ++r) {
         for (var c = 1; c < app.image.width - 1; ++c) {
           var thin_point = false;
@@ -735,7 +769,7 @@
           ]
 
           C.forEach(function (element) {
-            var is_equal = Thinning.match3x3Array(element, arr);
+            var is_equal = app.match3x3Array(element, arr);
             if (is_equal) {
               thin_point = true
             }
@@ -756,7 +790,9 @@
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
           var offset = (app.image.width * r + c) * 4;
-          if (grid[r][c] == COLOR_WHITE) {
+          if (grid[r][c] == COLOR_DONT_CARE) {
+            str += "&";
+          } else if (grid[r][c] == COLOR_WHITE) {
             str += " ";
           } else {
             str += "#"
@@ -905,30 +941,35 @@
       // console.log("Print Grid");
       // app.printGridInConsole(ZhangSuen.grid);
       for (var i = 0; i < n; ++i) {
-        console.log("Remove Grid", i);
+        // console.log("Remove Grid", i);
         app.removeEndPoints(ZhangSuen.grid);
-        app.printGridInConsole(ZhangSuen.grid);
+        // app.printGridInConsole(ZhangSuen.grid);
       }
 
       // console.log("Initial Matrix");
       // app.printGridInConsole(initialMatrix);
       for (var i = 0; i < n; ++i) {
-        console.log("Dilate Grid", i);
+        // console.log("Dilate Grid", i);
         app.dilateEndPoints(ZhangSuen.grid, initialMatrix);
-        app.printGridInConsole(ZhangSuen.grid);
+        // app.printGridInConsole(ZhangSuen.grid);
       }
       
       // app.findEndPoints(initialMatrix);
 
       app.printGridInConsole(ZhangSuen.grid);
-
+      
       var lineJunctions = app.getWhitePointFromGrid(app.findLineJunctions(ZhangSuen.grid));
       var endPoints = app.getWhitePointFromGrid(app.findEndPoints(ZhangSuen.grid));
       console.log("End Points");
       console.log(endPoints);
       console.log("Line Junctions");
       console.log(lineJunctions);
-
+      
+      console.log("Remove Doubled Line");
+      app.removeDoubledLine(ZhangSuen.grid, lineJunctions);
+      
+      app.printGridInConsole(ZhangSuen.grid);
+      
       var digit = app.classify(lineJunctions, endPoints);
       console.log(digit);
 
