@@ -162,8 +162,8 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
-      // mode: MODE_THINNING
-      mode: MODE_HIST_EQUAL
+      mode: MODE_THINNING
+      // mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
     };
@@ -761,6 +761,7 @@
             str += "#"
           }
         }
+        str = "\t" + r + "\t" + str;
         console.log(str);
         str = "";
       }
@@ -899,7 +900,7 @@
 
       var initialMatrix = app.copyGrid(ZhangSuen.grid);
       
-      var n = 10;
+      var n = 5;
       // console.log("Print Grid");
       // app.printGridInConsole(ZhangSuen.grid);
       for (var i = 0; i < n; ++i) {
