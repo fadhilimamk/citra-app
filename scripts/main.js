@@ -561,7 +561,8 @@
             for (var i = -1; i < 2; ++i) {
               for (var j = -1; j < 2; ++j) {
                 if (initialMatrix[r+i][c+j] == COLOR_WHITE) {
-                  grid[r][c] = COLOR_WHITE;
+                  grid[r+i][c+j] = COLOR_WHITE;
+                  // console.log("AAAAAAAAAAAAAAAAAAA ", r+i, " ", c+j);
                 }
               }
             }
@@ -900,21 +901,21 @@
 
       var initialMatrix = app.copyGrid(ZhangSuen.grid);
       
-      var n = 5;
+      var n = 10;
       // console.log("Print Grid");
       // app.printGridInConsole(ZhangSuen.grid);
       for (var i = 0; i < n; ++i) {
-        // console.log("Remove Grid", i);
+        console.log("Remove Grid", i);
         app.removeEndPoints(ZhangSuen.grid);
-        // app.printGridInConsole(ZhangSuen.grid);
+        app.printGridInConsole(ZhangSuen.grid);
       }
 
       // console.log("Initial Matrix");
       // app.printGridInConsole(initialMatrix);
       for (var i = 0; i < n; ++i) {
-        // console.log("Dilate Grid", i);
+        console.log("Dilate Grid", i);
         app.dilateEndPoints(ZhangSuen.grid, initialMatrix);
-        // app.printGridInConsole(ZhangSuen.grid);
+        app.printGridInConsole(ZhangSuen.grid);
       }
       
       // app.findEndPoints(initialMatrix);
