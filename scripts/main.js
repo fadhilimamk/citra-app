@@ -725,16 +725,13 @@
           D.forEach(function (mat) {
             var is_equal = app.match3x3Array(mat, arr);
             if (is_equal) {
-              doubled_point = true
-              // console.log("PRINT");
+              doubled_point = true;
             }
           });
           
           exceptional_point.forEach(function (point) {
             if (r - 1 <= point[0] && point[0] <= r + 1 && c - 1 <= point[1] && point[1] <= c+1) {
               doubled_point = false;
-              // console.log("EXCEPTIONAL");
-              // grid[r][c] = COLOR_DONT_CARE;
             }
           });
 
@@ -934,36 +931,36 @@
           }
         }
       }
-
+      
+      // console.log("Initial Matrix");
       var initialMatrix = app.copyGrid(ZhangSuen.grid);
+      // app.printGridInConsole(initialMatrix);
       
       var n = 10;
-      // console.log("Print Grid");
-      // app.printGridInConsole(ZhangSuen.grid);
+      
       for (var i = 0; i < n; ++i) {
         // console.log("Remove Grid", i);
         app.removeEndPoints(ZhangSuen.grid);
         // app.printGridInConsole(ZhangSuen.grid);
       }
-
-      // console.log("Initial Matrix");
-      // app.printGridInConsole(initialMatrix);
+      
+      // console.log("Print Grid");
+      // app.printGridInConsole(ZhangSuen.grid);
+      
       for (var i = 0; i < n; ++i) {
         // console.log("Dilate Grid", i);
         app.dilateEndPoints(ZhangSuen.grid, initialMatrix);
         // app.printGridInConsole(ZhangSuen.grid);
       }
-      
-      // app.findEndPoints(initialMatrix);
 
-      app.printGridInConsole(ZhangSuen.grid);
+      // app.printGridInConsole(ZhangSuen.grid);
       
       var lineJunctions = app.getWhitePointFromGrid(app.findLineJunctions(ZhangSuen.grid));
       var endPoints = app.getWhitePointFromGrid(app.findEndPoints(ZhangSuen.grid));
-      console.log("End Points");
-      console.log(endPoints);
       console.log("Line Junctions");
       console.log(lineJunctions);
+      console.log("End Points");
+      console.log(endPoints);
       
       console.log("Remove Doubled Line");
       app.removeDoubledLine(ZhangSuen.grid, lineJunctions);
