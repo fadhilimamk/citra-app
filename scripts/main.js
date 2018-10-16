@@ -57,8 +57,13 @@
       [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
       [COLOR_WHITE, COLOR_BLACK, COLOR_BLACK]
     ]
+    var B9 = [
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_WHITE, COLOR_BLACK],
+      [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK]
+    ]
     
-    var B = [B1, B2, B3, B4, B5, B6, B7, B8];
+    var B = [B1, B2, B3, B4, B5, B6, B7, B8, B9];
 
 
     // LINE JUNCTION PATTERN
@@ -188,8 +193,8 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
-      mode: MODE_THINNING
-      // mode: MODE_HIST_EQUAL
+      // mode: MODE_THINNING
+      mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
     };
@@ -569,7 +574,14 @@
       for (var r = 1; r < app.image.height - 1; ++r) {
         for (var c = 1; c < app.image.width - 1; ++c) {
           if (removedPoints[r][c] == COLOR_WHITE) {
-            grid[r][c] = COLOR_BLACK;
+            var arr = [
+              [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
+              [grid[r][c - 1], grid[r][c], grid[r][c + 1]],
+              [grid[r + 1][c - 1], grid[r + 1][c], grid[r + 1][c + 1]]
+            ]
+            if (app.match3x3Array(arr, B9) == false) {
+              grid[r][c] = COLOR_BLACK;
+            }
           }
         }
       }
