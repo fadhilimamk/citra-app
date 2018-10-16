@@ -304,6 +304,7 @@
         inputImageCamera.value = '';
         inputImageGallery.value = '';
         viewHistogram.style.display = 'none';
+        viewPredictionResult.style.display = 'none';
         inputHistogram.style.display = 'none';
       }
 
