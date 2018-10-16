@@ -265,6 +265,7 @@
     var butGallery = document.getElementById("butGallery");
     var viewHistogram = document.getElementById("viewHistogram"); 
     var viewDesiredHistogram = document.getElementById("viewDesiredHistogram");
+    var viewPredictionResult = document.getElementById("predictionResultView");
     var inputHistogram = document.getElementById("inputHistogram");
 
     var titleHistRed = document.getElementById("titleHistRed");
@@ -275,6 +276,9 @@
     var titleCumBlue = document.getElementById("titleCumBlue");
     var titleHistGrey = document.getElementById("titleHistGrey");
     var titleCumGrey = document.getElementById("titleCumGrey");
+
+    var txtPredictionChar = document.getElementById("predictedChar");
+    var txtPredictionASCII = document.getElementById("predictedASCII");
 
     inputMode.addEventListener('change', function() {
       var mode = inputMode.options[inputMode.selectedIndex].value;
@@ -1137,7 +1141,6 @@
       
       var digit = app.classify(lineJunctions, endPoints);
       console.log(digit);
-      alert("Hasil prediksi: " + digit);
 
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
@@ -1150,6 +1153,11 @@
       }
 
       app.showResultImage();
+      
+      viewPredictionResult.style.display = "block";
+      txtPredictionChar.textContent = digit;
+      txtPredictionASCII.textContent = "[ASCII="+digit.toString().charCodeAt(0)+"]";
+
 
     }
 
