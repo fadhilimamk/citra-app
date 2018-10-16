@@ -848,7 +848,6 @@
     }
 
     // Main function to handle image thinning
-
     app.processImageThinning = function() {
       var ZhangSuen = {};
       ZhangSuen.grid = Array(app.image.height);
@@ -961,20 +960,8 @@
 
       for (var r = 0; r < app.image.height; r++) {
         for (var c = 0; c < app.image.width; c++) {
-          if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
-            app.setPixelValue(c, r, WHITE);
-          } else {
-            app.setPixelValue(c, r, BLACK);
-          }
-        }
-      }
-
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
           if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
-            ZhangSuen.grid[r][c] = COLOR_WHITE;
-          } else {
-            ZhangSuen.grid[r][c] = COLOR_BLACK;
+            app.setPixelValue(c, r, WHITE);
           }
         }
       }
