@@ -67,10 +67,11 @@
     <div class="col s12">
       <div class="input-field col s12" style="margin-bottom:5px">
         <select id="app-mode">
-          <option value="equalization">Image Equalization</option>
-          <option value="specification">Image Specification</option>
-          <option value="ocr">Character Detection</option>
+          <option value="equalization">Histogram Equalization</option>
+          <option value="specification">Histogram Match (Specification)</option>
+          <option value="ocr">Character Detection (Chain Code)</option>
           <option value="thinning">Character Thinning</option>
+          <option value="thinning-ocr">Character Detection (Thinning)</option>
         </select>
         <label>Select mode:</label>
       </div>
@@ -159,35 +160,35 @@
     </div>
     <div class="row">
       <div class="col s6 center">
-        <small>Red Before</small>
+        <small id="titleHistRed">Red Before</small>
         <div id="histRed" class="ct-chart ct-perfect-fourth xred"></div>
       </div>
       <div class="col s6 center">
-        <small>Red After</small>
+        <small id="titleCumRed">Red After</small>
         <div id="cumRed" class="ct-chart ct-perfect-fourth xred"></div>
       </div>
       <div class="col s6 center">
-        <small>Green Before</small>
+        <small id="titleHistGreen">Green Before</small>
         <div id="histGreen" class="ct-chart ct-perfect-fourth xgreen"></div>
       </div>
       <div class="col s6 center">
-        <small>Green After</small>
+        <small id="titleCumGreen">Green After</small>
         <div id="cumGreen" class="ct-chart ct-perfect-fourth xgreen"></div>
       </div>
       <div class="col s6 center">
-        <small>Blue Before</small>
+        <small id="titleHistBlue">Blue Before</small>
         <div id="histBlue" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
       <div class="col s6 center">
-        <small>Blue After</small>
+        <small id="titleCumBlue">Blue After</small>
         <div id="cumBlue" class="ct-chart ct-perfect-fourth xblue"></div>
       </div>
       <div class="col s6 center">
-        <small>Grey Before</small>
+        <small id="titleHistGrey">Grey Before</small>
         <div id="histGrey" class="ct-chart ct-perfect-fourth xgrey"></div>
       </div>
       <div class="col s6 center">
-        <small>Grey After</small>
+        <small id="titleCumGrey">Grey After</small>
         <div id="cumGrey" class="ct-chart ct-perfect-fourth xgrey"></div>
       </div>
       <div class="col s12 center" hidden>

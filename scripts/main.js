@@ -266,6 +266,15 @@
     var viewDesiredHistogram = document.getElementById("viewDesiredHistogram");
     var inputHistogram = document.getElementById("inputHistogram");
 
+    var titleHistRed = document.getElementById("titleHistRed");
+    var titleCumRed = document.getElementById("titleCumRed");
+    var titleHistGreen = document.getElementById("titleHistGreen");
+    var titleCumGreen = document.getElementById("titleCumGreen");
+    var titleHistBlue = document.getElementById("titleHistBlue");
+    var titleCumBlue = document.getElementById("titleCumBlue");
+    var titleHistGrey = document.getElementById("titleHistGrey");
+    var titleCumGrey = document.getElementById("titleCumGrey");
+
     inputMode.addEventListener('change', function() {
       var mode = inputMode.options[inputMode.selectedIndex].value;
       if (mode === 'equalization') {
@@ -393,6 +402,15 @@
     // Main function to handle histogram equalization
     app.processImageEqualization = function() {
         viewHistogram.style.display = "block";
+
+        titleHistRed.textContent="Histogram Red";
+        titleCumRed.textContent="Cum. Histogram Red";
+        titleHistGreen.textContent="Histogram Green";
+        titleCumGreen.textContent="Cum. Histogram Green";
+        titleHistBlue.textContent="Histogram Blue";
+        titleCumBlue.textContent="Cum. Histogram Blue";
+        titleHistGrey.textContent="Histogram Grey";
+        titleCumGrey.textContent="Cum. Histogram Grey";
             
         app.calculateHistogram();
         app.showHistogram();
@@ -409,6 +427,15 @@
         viewHistogram.style.display = "block";
         inputHistogram.style.display = "block";
         viewDesiredHistogram.style.display = "block";
+
+        titleHistRed.textContent="Red Before";
+        titleCumRed.textContent="Red After";
+        titleHistGreen.textContent="Green Before";
+        titleCumGreen.textContent="Green After";
+        titleHistBlue.textContent="Blue Before";
+        titleCumBlue.textContent="Blue After";
+        titleHistGrey.textContent="Grey Before";
+        titleCumGrey.textContent="Grey After";
 
         app.calculateHistogram();
         app.showHistogram();

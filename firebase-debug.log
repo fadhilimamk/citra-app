@@ -1,0 +1,56 @@
+[debug] [2018-10-16T10:50:14.968Z] ----------------------------------------------------------------------
+[debug] [2018-10-16T10:50:14.970Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2018-10-16T10:50:14.970Z] CLI Version:   4.2.1
+[debug] [2018-10-16T10:50:14.970Z] Platform:      darwin
+[debug] [2018-10-16T10:50:14.970Z] Node Version:  v8.11.4
+[debug] [2018-10-16T10:50:14.970Z] Time:          Tue Oct 16 2018 17:50:14 GMT+0700 (WIB)
+[debug] [2018-10-16T10:50:14.970Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-10-16T10:50:14.978Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-10-16T10:50:14.978Z] > authorizing via signed-in user
+[debug] [2018-10-16T10:50:14.979Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-10-16T10:50:14.979Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+
+[debug] [2018-10-16T10:50:15.400Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-16T10:50:15.418Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/citra-apps  
+ 
+[info] 
+[warn] ⚠  Your CLI authentication needs to be updated to take advantage of new features.
+[warn] ⚠  Please run firebase login --reauth
+[info] 
+[debug] [2018-10-16T10:50:15.679Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase"]
+[debug] [2018-10-16T10:50:15.679Z] > authorizing via signed-in user
+[debug] [2018-10-16T10:50:15.679Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-10-16T10:50:15.679Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+
+[debug] [2018-10-16T10:50:15.906Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-16T10:50:15.922Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/citra-apps  
+ 
+[debug] [2018-10-16T10:50:16.435Z] Error: read ECONNRESET
+    at _errnoException (util.js:992:11)
+    at TLSWrap.onread (net.js:618:25)
+[error] 
+[error] Error: Server Error. read ECONNRESET
+[debug] [2018-10-16T10:50:28.118Z] ----------------------------------------------------------------------
+[debug] [2018-10-16T10:50:28.120Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2018-10-16T10:50:28.120Z] CLI Version:   4.2.1
+[debug] [2018-10-16T10:50:28.120Z] Platform:      darwin
+[debug] [2018-10-16T10:50:28.120Z] Node Version:  v8.11.4
+[debug] [2018-10-16T10:50:28.121Z] Time:          Tue Oct 16 2018 17:50:28 GMT+0700 (WIB)
+[debug] [2018-10-16T10:50:28.121Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-10-16T10:50:28.128Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-10-16T10:50:28.128Z] > authorizing via signed-in user
+[debug] [2018-10-16T10:50:28.129Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-10-16T10:50:28.130Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+
+[debug] [2018-10-16T10:50:28.495Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-16T10:50:28.514Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/citra-apps  
+ 
+[debug] [2018-10-16T10:50:29.603Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'citra-apps'...
+[info] 
+[info] i  deploying hosting
+[debug] [2018-10-16T10:50:29.608Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/citra-apps/versions  
+
