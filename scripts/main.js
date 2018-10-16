@@ -188,8 +188,8 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
-      // mode: MODE_THINNING
-      mode: MODE_HIST_EQUAL
+      mode: MODE_THINNING
+      // mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
     };
@@ -962,7 +962,7 @@
       console.log("End Points");
       console.log(endPoints);
       
-      console.log("Remove Doubled Line");
+      // console.log("Remove Doubled Line");
       app.removeDoubledLine(ZhangSuen.grid, lineJunctions);
       
       app.printGridInConsole(ZhangSuen.grid);
