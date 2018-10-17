@@ -579,16 +579,6 @@
 
     };
 
-    app.getPixelValue = function(x, y) {
-      var arr = Array(4);
-      var offset = (app.image.width * y + x) * 4;
-      for (var i = 0; i < 4; ++i) {
-        arr.push(app.imageData[offset+i]);
-      }
-
-      return arr;
-    }
-
     app.getPixelValue = function (x, y) {
       var arr = Array(4);
       var offset = (app.image.width * y + x) * 4;
