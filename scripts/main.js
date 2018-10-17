@@ -279,6 +279,7 @@
 
     var txtPredictionChar = document.getElementById("predictedChar");
     var txtPredictionASCII = document.getElementById("predictedASCII");
+    var txtChainCodeResult = document.getElementById("chainCodeResult");
 
     inputMode.addEventListener('change', function() {
       var mode = inputMode.options[inputMode.selectedIndex].value;
@@ -542,9 +543,15 @@
     };
 
     app.processImageOCR = function() {
+      viewPredictionResult.style.display = 'block';
+      txtPredictionASCII.style.display = 'none';
+      txtChainCodeResult.style.display = 'block';
+      app.showResultImage();
+
+      return;
+      // Unused implementation: upload raw image to server and get the result.
 
       var form = document.createElement("form");
-
       var imageInput = null;
       if (inputImageCamera.src != null) {
         imageInput = inputImageCamera;
