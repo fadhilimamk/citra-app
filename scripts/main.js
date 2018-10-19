@@ -547,11 +547,11 @@
       txtPredictionASCII.style.display = 'none';
       txtChainCodeResult.style.display = 'block';
 
-      console.log("asdas");
-      // app.showResultImage();
-
       // preprocess image to binary
-      var threshold = 100;
+      var row = 0, col = 0, threshold = 100;
+      var first_black_x = 0;
+      var first_black_y = 0;
+      var first_black = false;
       for (var i = 0, n = app.imageData.length; i < n; i+= 4) {
         var red = app.imageData[i];
         var green = app.imageData[i+1];
@@ -562,56 +562,113 @@
           app.imageData[i] = COLOR_BLACK;
           app.imageData[i+1] = COLOR_BLACK;
           app.imageData[i+2] = COLOR_BLACK;
+          
+          if (!first_black) {
+            first_black = true;
+            first_black_x = col;
+            first_black_y = row;
+          }
         } else {
           app.imageData[i] = COLOR_WHITE;
           app.imageData[i+1] = COLOR_WHITE;
           app.imageData[i+2] = COLOR_WHITE;
         }
         app.imageData[i+3] = 255;
-      }
 
-      app.showResultImage();
-
-      return;
-      // Unused implementation: upload raw image to server and get the result.
-
-      var form = document.createElement("form");
-      var imageInput = null;
-      if (inputImageCamera.src != null) {
-        imageInput = inputImageCamera;
-      } else {
-        imageInput = inputImageGallery;
-      }
-      form.appendChild(imageInput);
-      document.body.appendChild(form);
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://citra-apps.herokuapp.com/process", true);
-      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-      xhr.responseType = "arraybuffer";
-
-      // Load result to image after
-      xhr.onload = function(e) {
-        if (this.status == 200) {
-          var uInt8Array = new Uint8Array(this.response);
-          var i = uInt8Array.length;
-          var binaryString = new Array(i);
-          while (i--) {
-            binaryString[i] = String.fromCharCode(uInt8Array[i]);
-          }
-          var data = binaryString.join('');
-          var base64 = window.btoa(data);
-      
-          app.imageAfter.src="data:image/png;base64,"+base64;
+        col++;
+        if (col == app.image.width) {
+          col = 0;
+          row++;
         }
       }
 
-      xhr.send(new FormData(form));
+      console.log("first black = (" + first_black_x + ", " + first_black_y + ")");
+      var x = first_black_x, y = first_black_y;
+      var count_code = [0, 0, 0, 0, 0, 0, 0, 0];
+      var count = 0;
+      var min_x = x, max_x = x;
+      var min_y = y, max_y = y;
+
+      do {
+        var code = 0;
+
+        // console.log(app.getPixelValue(x-1,y-1)[0]/255 + " " + app.getPixelValue(x,y-1)[0]/255 + " " + app.getPixelValue(x+1,y-1)[0]/255);
+        // console.log(app.getPixelValue(x-1,y)[0]/255 + " " + app.getPixelValue(x,y)[0]/255 + " " + app.getPixelValue(x+1,y)[0]/255);
+        // console.log(app.getPixelValue(x-1,y+1)[0]/255 + " " + app.getPixelValue(x,y+1)[0]/255 + " " + app.getPixelValue(x+1,y+1)[0]/255);
+
+        if (x < min_x) min_x = x;
+        if (x > max_x) max_x = x;
+        if (y < min_y) min_y = y;
+        if (y > max_y) max_y = y;
+        
+        // find white to black pixel around
+        if (app.getPixelValue(x-1, y-1)[0] == COLOR_WHITE && app.getPixelValue(x, y-1)[0] == COLOR_BLACK)
+          code = 0;
+        else if (app.getPixelValue(x, y-1)[0] == COLOR_WHITE && app.getPixelValue(x+1, y-1)[0] == COLOR_BLACK)
+          code = 1;
+        else if (app.getPixelValue(x+1, y-1)[0] == COLOR_WHITE && app.getPixelValue(x+1, y)[0] == COLOR_BLACK)
+          code = 2;
+        else if (app.getPixelValue(x+1, y)[0] == COLOR_WHITE && app.getPixelValue(x+1, y+1)[0] == COLOR_BLACK)
+          code = 3;
+        else if (app.getPixelValue(x+1, y+1)[0] == COLOR_WHITE && app.getPixelValue(x, y+1)[0] == COLOR_BLACK)
+          code = 4;
+        else if (app.getPixelValue(x, y+1)[0] == COLOR_WHITE && app.getPixelValue(x-1, y+1)[0] == COLOR_BLACK)
+          code = 5;
+        else if (app.getPixelValue(x-1, y+1)[0] == COLOR_WHITE && app.getPixelValue(x-1, y)[0] == COLOR_BLACK)
+          code = 6;
+        else if (app.getPixelValue(x-1, y)[0] == COLOR_WHITE && app.getPixelValue(x-1, y-1)[0] == COLOR_BLACK)
+          code = 7;
+
+        count_code[code]++;
+        
+        // change current position to that position
+        if (code == 0) {
+          x = x; y = y-1;
+        } else if (code == 1) {
+          x = x+1; y = y-1;
+        } else if (code == 2) {
+          x = x+1; y = y;
+        } else if (code == 3) {
+          x = x+1; y = y+1;
+        } else if (code == 4) {
+          x = x; y = y+1;
+        } else if (code == 5) {
+          x = x-1; y = y+1;
+        } else if (code == 6) {
+          x = x-1; y = y;
+        } else if (code == 7) {
+          x = x-1; y = y-1;
+        }
+
+        // console.log(code);
+        count++;
+        if (count == 1000) {
+          x = first_black_x;
+          y = first_black_y;
+        }
+
+      } while (x != first_black_x || y != first_black_y);
+
+      console.log(count_code);
+
+      txtChainCodeResult.innerHTML = "Boundary square: ("+min_x+","+min_y+") ("+max_x+","+max_y+")<br> \
+      Character dimension: "+(max_x-min_x)+"x"+(max_y-min_y)+" <br>\
+      #Chain code 0 : "+count_code[0]+" <br> \
+      #Chain code 1 : "+count_code[1]+" <br>  \
+      #Chain code 2 : "+count_code[2]+" <br> \
+      #Chain code 3 : "+count_code[3]+" <br>  \
+      #Chain code 4 : "+count_code[4]+" <br> \
+      #Chain code 5 : "+count_code[5]+" <br>  \
+      #Chain code 6 : "+count_code[6]+" <br> \
+      #Chain code 7 : "+count_code[7]+" <br>";
+      app.showResultImage();
+
+      return;
 
     };
 
     app.getPixelValue = function (x, y) {
-      var arr = Array(4);
+      var arr = [];
       var offset = (app.image.width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
         arr.push(app.imageData[offset + i]);
