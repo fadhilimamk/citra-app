@@ -582,12 +582,28 @@
         }
       }
 
+      // Base data for prediction
+      var base_count = [
+        [85, 27, 34, 27, 85, 27, 34, 27],     // 0
+        [123, 31, 18, 0, 136, 19, 29, 1],     // 1
+        [58, 90, 112, 22, 66, 77, 130, 17],   // 2
+        [81, 57, 95, 57, 79, 56, 99, 54],     // 3
+        [73, 62, 29, 2, 133, 1, 91, 1],       // 4
+        [101, 41, 137, 43, 94, 48, 130, 43],  // 5
+        [92, 45, 69, 45, 86, 48, 69, 42],     // 6
+        [85, 47, 88, 0, 82, 52, 81, 2],       // 7
+        [61, 39, 47, 41, 59, 39, 49, 39],     // 8
+        [86, 48, 68, 43, 89, 46, 69, 44]      // 9
+      ];
+
+      // Start recording chain code
       console.log("first black = (" + first_black_x + ", " + first_black_y + ")");
       var x = first_black_x, y = first_black_y;
       var count_code = [0, 0, 0, 0, 0, 0, 0, 0];
       var count = 0;
       var min_x = x, max_x = x;
       var min_y = y, max_y = y;
+      var predicted = 0;
 
       do {
         var code = 0;
@@ -651,6 +667,21 @@
 
       console.log(count_code);
 
+      // Start predicting
+      var min_error = 99999;
+      for (var i = 0; i < base_count.length; i++) {
+        var error = 0;
+        for (var j = 0; j < base_count[i].length; j++) {
+          error = error + Math.abs(count_code[j] - base_count[i][j]);
+        }
+        console.log(error);
+        if (error < min_error) {
+          min_error = error;
+          predicted = i;
+        }
+      }
+
+      txtPredictionChar.textContent = predicted;
       txtChainCodeResult.innerHTML = "Boundary square: ("+min_x+","+min_y+") ("+max_x+","+max_y+")<br> \
       Character dimension: "+(max_x-min_x)+"x"+(max_y-min_y)+" <br>\
       #Chain code 0 : "+count_code[0]+" <br> \
