@@ -546,6 +546,30 @@
       viewPredictionResult.style.display = 'block';
       txtPredictionASCII.style.display = 'none';
       txtChainCodeResult.style.display = 'block';
+
+      console.log("asdas");
+      // app.showResultImage();
+
+      // preprocess image to binary
+      var threshold = 100;
+      for (var i = 0, n = app.imageData.length; i < n; i+= 4) {
+        var red = app.imageData[i];
+        var green = app.imageData[i+1];
+        var blue = app.imageData[i+2];
+        var greyscale = Math.round((red+green+blue)/3)
+
+        if (greyscale < threshold) {
+          app.imageData[i] = COLOR_BLACK;
+          app.imageData[i+1] = COLOR_BLACK;
+          app.imageData[i+2] = COLOR_BLACK;
+        } else {
+          app.imageData[i] = COLOR_WHITE;
+          app.imageData[i+1] = COLOR_WHITE;
+          app.imageData[i+2] = COLOR_WHITE;
+        }
+        app.imageData[i+3] = 255;
+      }
+
       app.showResultImage();
 
       return;
@@ -885,7 +909,6 @@
           column = 0;
           row++;
         }
-
       }
 
       app.showResultImage();
