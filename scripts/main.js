@@ -1106,7 +1106,8 @@
       var initialMatrix = app.copyGrid(ZhangSuen.grid);
       // app.printGridInConsole(initialMatrix);
       
-      var n = 10;
+      var n = window.screen.availWidth / 30;
+      console.log(n);
       
       for (var i = 0; i < n; ++i) {
         // console.log("Remove Grid", i);
