@@ -1182,9 +1182,9 @@
 
     }
 
-    app.classify = function (intersection_list, endpoint_list) {
-      // console.log(endpoint_list.length);
-      // console.log(intersection_list.length);
+    app.classify_digit = function (intersection_list, endpoint_list) {
+      console.log(endpoint_list.length);
+      console.log(intersection_list.length);
       if (endpoint_list.length == 0) {
         if (intersection_list.length == 0) {
           return 0;
@@ -1226,6 +1226,170 @@
           return 3;
         }
       }
+    };
+
+    app.classify = function (intersection_list, endpoint_list) {
+      if (endpoint_list.length == 0) {
+        if (intersection_list.length == 0) {
+          return '0';
+        } else if (intersection_list.length == 2) {
+          return '8';
+        } else {
+          return 'W';
+        }
+      }
+
+      else if (endpoint_list.length == 1) {
+        if (intersection_list.length == 0) {
+          return '.';
+        } else if (intersection_list.length == 1) {
+          return 'e';
+        }
+      }
+
+      else if (endpoint_list.length == 2) {
+        if (intersection_list.length == 0) {
+          var var_baris_end_0 = endpoint_list[0][0]/app.image.height;
+          var var_kolom_end_0 = endpoint_list[0][1]/app.image.width;
+          var var_baris_end_1 = endpoint_list[1][0]/app.image.height;
+          var var_kolom_end_1 = endpoint_list[1][1]/app.image.width;
+          
+          if (var_baris_end_0 < 0.25) {
+          	if (var_kolom_end_1 > 0.5) {
+          	  return '(';
+          	} else {
+          	  return ')';
+          	}
+          }
+
+          else if (var_baris_end_0 < 0.37) {
+          	if (var_kolom_end_0 < 0.4) {
+          	  if (var_baris_end_1 < 0.5) {
+          	  	return 'U';
+          	  } else {
+          	  	if (var_kolom_end_1 < 0.35) {
+          	  	  return 'b';
+          	  	} else if (var_kolom_end_1 < 0.55) {
+          	  	  return '7';
+          	  	} else if (var_kolom_end_1 < 0.75) {
+          	  	  return 'L';
+          	  	} else {
+          	  	  return 'Z';
+          	  	}
+          	  }
+          	} else if (var_kolom_end_0 < 0.55) {
+          	  if (var_baris_end_1 < 0.6) {
+          	  	return '\'';
+          	  } else {
+          	  	return 'I';
+          	  }
+          	} else if (var_kolom_end_0 < 0.665) {
+          	  if (var_kolom_end_1 < 0.32) {
+          	  	return 'J';
+          	  } else {
+          	  	return '/';
+          	  }
+          	} else if (var_kolom_end_0 < 0.74) {
+          	  if (var_baris_end_1 < 0.795) {
+          	  	return '5';
+          	  } else {
+          	  	return '%';
+          	  }
+          	} else if (var_kolom_end_0 < 0.82) {
+          	  return 'N';
+          	} else {
+          	  return 'V';
+          	}
+          }
+
+          else if (var_baris_end_0 < 0.495) {
+          	if (var_kolom_end_0 < 0.47) {
+          	  if (var_kolom_end_1 < 0.7126) {
+          	  	return '2';
+          	  } else {
+          	  	return 'z';
+          	  }
+          	} else if (var_kolom_end_0 < 0.85) {
+          	  if (var_baris_end_1 < 0.53) {
+          	  	return 'v';
+          	  } else if (var_baris_end_1 < 0.64) {
+          	  	return 'z';
+          	  } else {
+          	  	if (var_kolom_end_1 < 0.5) {
+          	  	  return 'S';
+          	  	} else {
+          	  	  return 'C';
+          	  	}
+          	  }
+          	} else {
+          	  return 'w';
+          	}
+          }
+
+          else if (var_baris_end_0 < 0.595) {
+          	if (var_kolom_end_1 < 0.5) {
+          	  return 's';
+          	} else {
+          	  return 'c';
+          	}
+          }
+
+          else if (var_baris_end_0 < 0.71) {
+          	return '-';
+          }
+
+          else {
+          	if (var_kolom_end_1 < 0.64) {
+          	  return ',';
+          	} else {
+          	  return 'M';
+          	}
+          }
+        }
+
+        else if (intersection_list.length == 1) {
+          return 'Q';
+        }
+        else if (intersection_list.length == 1) {
+          return 'a';
+        } else {
+          return '4';
+        }
+      }
+
+      else if (endpoint_list.length == 3) {
+        if (intersection_list.length == 0) {
+          return 'i';
+        } else if (intersection_list.length == 1) {
+          return '3';
+        } else if (intersection_list.length < 5) {
+          return '4';
+        } else {
+          return '$';
+        }
+      }
+
+      else if (endpoint_list.length == 4) {
+        if (intersection_list.length == 0) {
+          return '"';
+        } else if (intersection_list.length == 1) {
+          return 'X';
+        } else if (intersection_list.length == 2) {
+          return 'K';
+        } else {
+          return 'f';
+        }
+      }
+
+      else if (endpoint_list.length == 4) {
+        return '*';
+      }
+
+      else {
+      	return '#';
+      }
+
+       
     };
 
 
