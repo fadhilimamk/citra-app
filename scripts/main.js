@@ -194,10 +194,13 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
+      real_width: null,
+      real_height:null,
       // mode: MODE_THINNING
       mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
+
     };
 
     // default value for slider
@@ -376,19 +379,42 @@
     app.processImage = function(image) {
       var reader = new FileReader();
       reader.onload = function (e) {
-        app.image.onload = function () {
+        
+        var image = new Image();
+        image.src = e.target.result;
+
+        image.onload = function () {
+        // app.image.onload = function () {
 
           if (app.imageRaw == null) {
             return;
           }
 
+          // penting
+          app.real_height = this.height;
+          app.real_width = this.width;
+
+          console.log(app.real_width);
+          console.log(app.real_height);
+
           // prepare canvas and data for processing
-          app.imageCanvas.width = app.image.width;
-          app.imageCanvas.height = app.image.height;
+          app.imageCanvas.width = this.width;
+          app.imageCanvas.height = this.height;
           app.imageCtx = app.imageCanvas.getContext('2d');
-          app.imageCtx.drawImage(app.image, 0, 0, app.image.width, app.image.height);
-          app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
-          
+          // console.log(app.imageCtx);
+          app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
+          app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
+          // console.log(app.imageData);
+
+          // // prepare canvas and data for processing
+          // app.imageCanvas.width = app.real_width;
+          // app.imageCanvas.height = app.real_height;
+          // app.imageCtx = app.imageCanvas.getContext('2d');
+          // console.log(app.imageCtx);
+          // app.imageCtx.drawImage(app.image, 0, 0, app.real_width, app.real_height);
+          // app.imageData = app.imageCtx.getImageData(0, 0, app.real_width, app.real_height).data;
+          // console.log(app.imageData);
+
           viewDesiredHistogram.style.display = "none";
 
           // check mode
@@ -576,7 +602,7 @@
         app.imageData[i+3] = 255;
 
         col++;
-        if (col == app.image.width) {
+        if (col == app.real_width) {
           col = 0;
           row++;
         }
@@ -700,7 +726,7 @@
 
     app.getPixelValue = function (x, y) {
       var arr = [];
-      var offset = (app.image.width * y + x) * 4;
+      var offset = (app.real_width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
         arr.push(app.imageData[offset + i]);
       }
@@ -709,7 +735,7 @@
     }
 
     app.setPixelValue = function (x, y, val) {
-      var offset = (app.image.width * y + x) * 4;
+      var offset = (app.real_width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
         app.imageData[offset + i] = val[i];
       }
@@ -719,8 +745,8 @@
     app.removeEndPoints = function (grid) {
       var removedPoints = app.findEndPoints(grid);
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           if (removedPoints[r][c] == COLOR_WHITE) {
             var arr = [
               [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -741,8 +767,8 @@
       // console.log("Dilated points")
       // app.printGridInConsole(dilatedPoints);
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           if (dilatedPoints[r][c] == COLOR_WHITE) {
             for (var i = -1; i < 2; ++i) {
               for (var j = -1; j < 2; ++j) {
@@ -760,17 +786,17 @@
     app.copyGrid = function (grid) {
 
       var EndPoints = {};
-      EndPoints.grid = Array(app.image.height);
+      EndPoints.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        EndPoints.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        EndPoints.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           EndPoints.grid[r].push(grid[r][c]);
         }
       }
 
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (grid[r][c] == COLOR_WHITE) {
             EndPoints.grid[r][c] = COLOR_WHITE;
           }
@@ -783,17 +809,17 @@
     app.findEndPoints = function (grid) {
 
       var EndPoints = {};
-      EndPoints.grid = Array(app.image.height);
+      EndPoints.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        EndPoints.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        EndPoints.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           EndPoints.grid[r].push(COLOR_BLACK);
         }
       }
 
-      for (var r = 1; r < app.image.height-1; ++r) {
-        for (var c = 1; c < app.image.width-1; ++c) {
+      for (var r = 1; r < app.real_height-1; ++r) {
+        for (var c = 1; c < app.real_width-1; ++c) {
           var last_point = false;
           var arr = [
             [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
@@ -837,17 +863,17 @@
     app.findLineJunctions = function (grid) {
 
       var LineJunctions = {};
-      LineJunctions.grid = Array(app.image.height);
+      LineJunctions.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        LineJunctions.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        LineJunctions.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           LineJunctions.grid[r].push(COLOR_BLACK);
         }
       }
 
-      for (var r = 1; r < app.image.height-1; ++r) {
-        for (var c = 1; c < app.image.width-1; ++c) {
+      for (var r = 1; r < app.real_height-1; ++r) {
+        for (var c = 1; c < app.real_width-1; ++c) {
           var last_point = false;
           var arr = [
             [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
@@ -873,8 +899,8 @@
     
 
     app.removeDoubledLine = function(grid, exceptional_point) {
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           var doubled_point = false;
           var arr = [
             [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -904,8 +930,8 @@
 
     app.getWhitePointFromGrid = function(grid) {
       var list = []
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (grid[r][c] == COLOR_WHITE) {
             list.push([r, c]);
           }
@@ -916,8 +942,8 @@
 
     app.thinning = function (grid) {
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           var thin_point = false;
           var arr = [
             [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -944,9 +970,9 @@
 
       var str = "";
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
-          var offset = (app.image.width * r + c) * 4;
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          var offset = (app.real_width * r + c) * 4;
           if (grid[r][c] == COLOR_DONT_CARE) {
             str += "&";
           } else if (grid[r][c] == COLOR_WHITE) {
@@ -964,7 +990,7 @@
     // Main function to handle image thinning
     app.processImageThinning = function() {
       var ZhangSuen = {};
-      ZhangSuen.grid = Array(app.image.height);
+      ZhangSuen.grid = Array(app.real_height);
       var threshold = 100;
       
       // Ubah gambar menjadi black-white
@@ -993,7 +1019,7 @@
         app.imageData[i+3] = 255;
 
         column++;
-        if (column == app.image.width) {
+        if (column == app.real_width) {
           column = 0;
           row++;
         }
@@ -1071,8 +1097,8 @@
       var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
       var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
             app.setPixelValue(c, r, WHITE);
           }
@@ -1085,7 +1111,7 @@
 
     app.processImageThinningOCR = function() {
       var ZhangSuen = {};
-      ZhangSuen.grid = Array(app.image.height);
+      ZhangSuen.grid = Array(app.real_height);
       var threshold = 100;
       
       // Ubah gambar menjadi black-white
@@ -1114,7 +1140,7 @@
         app.imageData[i+3] = 255;
 
         column++;
-        if (column == app.image.width) {
+        if (column == app.real_width) {
           column = 0;
           row++;
         }
@@ -1193,8 +1219,8 @@
       var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
       var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
             app.setPixelValue(c, r, WHITE);
           } else {
@@ -1203,8 +1229,8 @@
         }
       }
 
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
             ZhangSuen.grid[r][c] = COLOR_WHITE;
           } else {
@@ -1251,8 +1277,8 @@
       var digit = app.classify(lineJunctions, endPoints);
       console.log(digit);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
             app.setPixelValue(c, r, WHITE);
           } else {
@@ -1337,10 +1363,10 @@
 
       else if (endpoint_list.length == 2) {
         if (intersection_list.length == 0) {
-          var var_baris_end_0 = endpoint_list[0][0]/app.image.height;
-          var var_kolom_end_0 = endpoint_list[0][1]/app.image.width;
-          var var_baris_end_1 = endpoint_list[1][0]/app.image.height;
-          var var_kolom_end_1 = endpoint_list[1][1]/app.image.width;
+          var var_baris_end_0 = endpoint_list[0][0]/app.real_height;
+          var var_kolom_end_0 = endpoint_list[0][1]/app.real_width;
+          var var_baris_end_1 = endpoint_list[1][0]/app.real_height;
+          var var_kolom_end_1 = endpoint_list[1][1]/app.real_width;
           
           if (var_baris_end_0 < 0.25) {
           	if (var_kolom_end_1 > 0.5) {
@@ -1499,11 +1525,11 @@
         var r = row + nbrs[i][1];
         var c = column + nbrs[i][0];
 
-        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+        if (r < 0 || c < 0 || r > app.real_height-1 || r > app.real_width-1) {
           continue;
         }
 
-        var offset = (app.image.width * r + c)*4;
+        var offset = (app.real_width * r + c)*4;
         if (app.imageData[offset] == COLOR_BLACK) {
           count++;
         }
@@ -1520,15 +1546,15 @@
         var r = row + nbrs[i][1];
         var c = column + nbrs[i][0];
 
-        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+        if (r < 0 || c < 0 || r > app.real_height-1 || r > app.real_width-1) {
           continue;
         }
 
-        var offset = (app.image.width * r + c)*4;
+        var offset = (app.real_width * r + c)*4;
         if (app.imageData[offset] == COLOR_WHITE) {
           r = row + nbrs[i+1][1];
           c = column + nbrs[i+1][0];
-          offset = (app.image.width * r + c)*4;
+          offset = (app.real_width * r + c)*4;
           if (app.imageData[offset] == COLOR_BLACK) {
             count++;
           }
@@ -1548,7 +1574,7 @@
             var nbr = nbrs[group[i][j]];
             var r = row + nbr[1];
             var c = column + nbr[0];
-            var offset = (app.image.width * r + c)*4;
+            var offset = (app.real_width * r + c)*4;
             if (app.imageData[offset] == COLOR_WHITE) {
                 count++;
                 break;
@@ -1701,7 +1727,7 @@
       // console.log(r_cum);
       // console.log(g_cum);
       // console.log(b_cum);
-      image_size = app.image.width * app.image.height;
+      image_size = app.real_width * app.real_height;
       for (var i = 0; i < r_cum.length; ++i) {
         r_map[i] = Math.abs(Math.round((r_cum[i]-1)*255/image_size));
       }
@@ -1727,8 +1753,8 @@
 
     app.showResultImage = function () {
       var canvas = document.createElement("canvas");
-      canvas.width = app.image.width;
-      canvas.height = app.image.height;
+      canvas.width = app.real_width;
+      canvas.height = app.real_height;
       var ctx = canvas.getContext("2d");
       ctx.putImageData(new ImageData(app.imageData, canvas.width, canvas.height), 0, 0);  
       app.imageAfter.src = canvas.toDataURL("img/png");
