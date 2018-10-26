@@ -3,6 +3,10 @@
 (function() {
     'use strict';
 
+    var script = document.createElement('script');
+    script.src = 'scripts/char_skeleton_grid.js';
+    document.head.appendChild(script);
+
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('select');
       var instances = M.FormSelect.init(elems);
@@ -194,10 +198,13 @@
       imageCanvas: document.createElement("canvas"),
       imageCtx: null,
       imageData: null,
+      real_width: null,
+      real_height:null,
       // mode: MODE_THINNING
       mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
+
     };
 
     // default value for slider
@@ -376,19 +383,42 @@
     app.processImage = function(image) {
       var reader = new FileReader();
       reader.onload = function (e) {
-        app.image.onload = function () {
+        
+        var image = new Image();
+        image.src = e.target.result;
+
+        image.onload = function () {
+        // app.image.onload = function () {
 
           if (app.imageRaw == null) {
             return;
           }
 
+          // penting
+          app.real_height = this.height;
+          app.real_width = this.width;
+
+          console.log(app.real_width);
+          console.log(app.real_height);
+
           // prepare canvas and data for processing
-          app.imageCanvas.width = app.image.width;
-          app.imageCanvas.height = app.image.height;
+          app.imageCanvas.width = this.width;
+          app.imageCanvas.height = this.height;
           app.imageCtx = app.imageCanvas.getContext('2d');
-          app.imageCtx.drawImage(app.image, 0, 0, app.image.width, app.image.height);
-          app.imageData = app.imageCtx.getImageData(0, 0, app.image.width, app.image.height).data;
-          
+          // console.log(app.imageCtx);
+          app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
+          app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
+          // console.log(app.imageData);
+
+          // // prepare canvas and data for processing
+          // app.imageCanvas.width = app.real_width;
+          // app.imageCanvas.height = app.real_height;
+          // app.imageCtx = app.imageCanvas.getContext('2d');
+          // console.log(app.imageCtx);
+          // app.imageCtx.drawImage(app.image, 0, 0, app.real_width, app.real_height);
+          // app.imageData = app.imageCtx.getImageData(0, 0, app.real_width, app.real_height).data;
+          // console.log(app.imageData);
+
           viewDesiredHistogram.style.display = "none";
 
           // check mode
@@ -546,49 +576,161 @@
       viewPredictionResult.style.display = 'block';
       txtPredictionASCII.style.display = 'none';
       txtChainCodeResult.style.display = 'block';
-      app.showResultImage();
 
-      return;
-      // Unused implementation: upload raw image to server and get the result.
+      // preprocess image to binary
+      var row = 0, col = 0, threshold = 100;
+      var first_black_x = 0;
+      var first_black_y = 0;
+      var first_black = false;
+      for (var i = 0, n = app.imageData.length; i < n; i+= 4) {
+        var red = app.imageData[i];
+        var green = app.imageData[i+1];
+        var blue = app.imageData[i+2];
+        var greyscale = Math.round((red+green+blue)/3)
 
-      var form = document.createElement("form");
-      var imageInput = null;
-      if (inputImageCamera.src != null) {
-        imageInput = inputImageCamera;
-      } else {
-        imageInput = inputImageGallery;
-      }
-      form.appendChild(imageInput);
-      document.body.appendChild(form);
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://citra-apps.herokuapp.com/process", true);
-      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-      xhr.responseType = "arraybuffer";
-
-      // Load result to image after
-      xhr.onload = function(e) {
-        if (this.status == 200) {
-          var uInt8Array = new Uint8Array(this.response);
-          var i = uInt8Array.length;
-          var binaryString = new Array(i);
-          while (i--) {
-            binaryString[i] = String.fromCharCode(uInt8Array[i]);
+        if (greyscale < threshold) {
+          app.imageData[i] = COLOR_BLACK;
+          app.imageData[i+1] = COLOR_BLACK;
+          app.imageData[i+2] = COLOR_BLACK;
+          
+          if (!first_black) {
+            first_black = true;
+            first_black_x = col;
+            first_black_y = row;
           }
-          var data = binaryString.join('');
-          var base64 = window.btoa(data);
-      
-          app.imageAfter.src="data:image/png;base64,"+base64;
+        } else {
+          app.imageData[i] = COLOR_WHITE;
+          app.imageData[i+1] = COLOR_WHITE;
+          app.imageData[i+2] = COLOR_WHITE;
+        }
+        app.imageData[i+3] = 255;
+
+        col++;
+        if (col == app.real_width) {
+          col = 0;
+          row++;
         }
       }
 
-      xhr.send(new FormData(form));
+      // Base data for prediction
+      var base_count = [
+        [85, 27, 34, 27, 85, 27, 34, 27],     // 0
+        [123, 31, 18, 0, 136, 19, 29, 1],     // 1
+        [58, 90, 112, 22, 66, 77, 130, 17],   // 2
+        [81, 57, 95, 57, 79, 56, 99, 54],     // 3
+        [73, 62, 29, 2, 133, 1, 91, 1],       // 4
+        [101, 41, 137, 43, 94, 48, 130, 43],  // 5
+        [92, 45, 69, 45, 86, 48, 69, 42],     // 6
+        [85, 47, 88, 0, 82, 52, 81, 2],       // 7
+        [61, 39, 47, 41, 59, 39, 49, 39],     // 8
+        [86, 48, 68, 43, 89, 46, 69, 44]      // 9
+      ];
+
+      // Start recording chain code
+      console.log("first black = (" + first_black_x + ", " + first_black_y + ")");
+      var x = first_black_x, y = first_black_y;
+      var count_code = [0, 0, 0, 0, 0, 0, 0, 0];
+      var count = 0;
+      var min_x = x, max_x = x;
+      var min_y = y, max_y = y;
+      var predicted = 0;
+
+      do {
+        var code = 0;
+
+        // console.log(app.getPixelValue(x-1,y-1)[0]/255 + " " + app.getPixelValue(x,y-1)[0]/255 + " " + app.getPixelValue(x+1,y-1)[0]/255);
+        // console.log(app.getPixelValue(x-1,y)[0]/255 + " " + app.getPixelValue(x,y)[0]/255 + " " + app.getPixelValue(x+1,y)[0]/255);
+        // console.log(app.getPixelValue(x-1,y+1)[0]/255 + " " + app.getPixelValue(x,y+1)[0]/255 + " " + app.getPixelValue(x+1,y+1)[0]/255);
+
+        if (x < min_x) min_x = x;
+        if (x > max_x) max_x = x;
+        if (y < min_y) min_y = y;
+        if (y > max_y) max_y = y;
+        
+        // find white to black pixel around
+        if (app.getPixelValue(x-1, y-1)[0] == COLOR_WHITE && app.getPixelValue(x, y-1)[0] == COLOR_BLACK)
+          code = 0;
+        else if (app.getPixelValue(x, y-1)[0] == COLOR_WHITE && app.getPixelValue(x+1, y-1)[0] == COLOR_BLACK)
+          code = 1;
+        else if (app.getPixelValue(x+1, y-1)[0] == COLOR_WHITE && app.getPixelValue(x+1, y)[0] == COLOR_BLACK)
+          code = 2;
+        else if (app.getPixelValue(x+1, y)[0] == COLOR_WHITE && app.getPixelValue(x+1, y+1)[0] == COLOR_BLACK)
+          code = 3;
+        else if (app.getPixelValue(x+1, y+1)[0] == COLOR_WHITE && app.getPixelValue(x, y+1)[0] == COLOR_BLACK)
+          code = 4;
+        else if (app.getPixelValue(x, y+1)[0] == COLOR_WHITE && app.getPixelValue(x-1, y+1)[0] == COLOR_BLACK)
+          code = 5;
+        else if (app.getPixelValue(x-1, y+1)[0] == COLOR_WHITE && app.getPixelValue(x-1, y)[0] == COLOR_BLACK)
+          code = 6;
+        else if (app.getPixelValue(x-1, y)[0] == COLOR_WHITE && app.getPixelValue(x-1, y-1)[0] == COLOR_BLACK)
+          code = 7;
+
+        count_code[code]++;
+        
+        // change current position to that position
+        if (code == 0) {
+          x = x; y = y-1;
+        } else if (code == 1) {
+          x = x+1; y = y-1;
+        } else if (code == 2) {
+          x = x+1; y = y;
+        } else if (code == 3) {
+          x = x+1; y = y+1;
+        } else if (code == 4) {
+          x = x; y = y+1;
+        } else if (code == 5) {
+          x = x-1; y = y+1;
+        } else if (code == 6) {
+          x = x-1; y = y;
+        } else if (code == 7) {
+          x = x-1; y = y-1;
+        }
+
+        // console.log(code);
+        count++;
+        if (count == 1000) {
+          x = first_black_x;
+          y = first_black_y;
+        }
+
+      } while (x != first_black_x || y != first_black_y);
+
+      console.log(count_code);
+
+      // Start predicting
+      var min_error = 99999;
+      for (var i = 0; i < base_count.length; i++) {
+        var error = 0;
+        for (var j = 0; j < base_count[i].length; j++) {
+          error = error + Math.abs(count_code[j] - base_count[i][j]);
+        }
+        console.log(error);
+        if (error < min_error) {
+          min_error = error;
+          predicted = i;
+        }
+      }
+
+      txtPredictionChar.textContent = predicted;
+      txtChainCodeResult.innerHTML = "Boundary square: ("+min_x+","+min_y+") ("+max_x+","+max_y+")<br> \
+      Character dimension: "+(max_x-min_x)+"x"+(max_y-min_y)+" <br>\
+      #Chain code 0 : "+count_code[0]+" <br> \
+      #Chain code 1 : "+count_code[1]+" <br>  \
+      #Chain code 2 : "+count_code[2]+" <br> \
+      #Chain code 3 : "+count_code[3]+" <br>  \
+      #Chain code 4 : "+count_code[4]+" <br> \
+      #Chain code 5 : "+count_code[5]+" <br>  \
+      #Chain code 6 : "+count_code[6]+" <br> \
+      #Chain code 7 : "+count_code[7]+" <br>";
+      app.showResultImage();
+
+      return;
 
     };
 
     app.getPixelValue = function (x, y) {
-      var arr = Array(4);
-      var offset = (app.image.width * y + x) * 4;
+      var arr = [];
+      var offset = (app.real_width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
         arr.push(app.imageData[offset + i]);
       }
@@ -597,7 +739,7 @@
     }
 
     app.setPixelValue = function (x, y, val) {
-      var offset = (app.image.width * y + x) * 4;
+      var offset = (app.real_width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
         app.imageData[offset + i] = val[i];
       }
@@ -607,8 +749,8 @@
     app.removeEndPoints = function (grid) {
       var removedPoints = app.findEndPoints(grid);
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           if (removedPoints[r][c] == COLOR_WHITE) {
             var arr = [
               [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -629,8 +771,8 @@
       // console.log("Dilated points")
       // app.printGridInConsole(dilatedPoints);
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           if (dilatedPoints[r][c] == COLOR_WHITE) {
             for (var i = -1; i < 2; ++i) {
               for (var j = -1; j < 2; ++j) {
@@ -648,17 +790,17 @@
     app.copyGrid = function (grid) {
 
       var EndPoints = {};
-      EndPoints.grid = Array(app.image.height);
+      EndPoints.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        EndPoints.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        EndPoints.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           EndPoints.grid[r].push(grid[r][c]);
         }
       }
 
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (grid[r][c] == COLOR_WHITE) {
             EndPoints.grid[r][c] = COLOR_WHITE;
           }
@@ -671,17 +813,17 @@
     app.findEndPoints = function (grid) {
 
       var EndPoints = {};
-      EndPoints.grid = Array(app.image.height);
+      EndPoints.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        EndPoints.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        EndPoints.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           EndPoints.grid[r].push(COLOR_BLACK);
         }
       }
 
-      for (var r = 1; r < app.image.height-1; ++r) {
-        for (var c = 1; c < app.image.width-1; ++c) {
+      for (var r = 1; r < app.real_height-1; ++r) {
+        for (var c = 1; c < app.real_width-1; ++c) {
           var last_point = false;
           var arr = [
             [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
@@ -725,17 +867,17 @@
     app.findLineJunctions = function (grid) {
 
       var LineJunctions = {};
-      LineJunctions.grid = Array(app.image.height);
+      LineJunctions.grid = Array(app.real_height);
 
-      for (var r = 0; r < app.image.height; ++r) {
-        LineJunctions.grid[r] = Array(app.image.width);
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        LineJunctions.grid[r] = Array(app.real_width);
+        for (var c = 0; c < app.real_width; ++c) {
           LineJunctions.grid[r].push(COLOR_BLACK);
         }
       }
 
-      for (var r = 1; r < app.image.height-1; ++r) {
-        for (var c = 1; c < app.image.width-1; ++c) {
+      for (var r = 1; r < app.real_height-1; ++r) {
+        for (var c = 1; c < app.real_width-1; ++c) {
           var last_point = false;
           var arr = [
             [grid[r-1][c-1], grid[r-1][c], grid[r-1][c+1]],
@@ -761,8 +903,8 @@
     
 
     app.removeDoubledLine = function(grid, exceptional_point) {
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           var doubled_point = false;
           var arr = [
             [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -792,8 +934,8 @@
 
     app.getWhitePointFromGrid = function(grid) {
       var list = []
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (grid[r][c] == COLOR_WHITE) {
             list.push([r, c]);
           }
@@ -804,8 +946,8 @@
 
     app.thinning = function (grid) {
 
-      for (var r = 1; r < app.image.height - 1; ++r) {
-        for (var c = 1; c < app.image.width - 1; ++c) {
+      for (var r = 1; r < app.real_height - 1; ++r) {
+        for (var c = 1; c < app.real_width - 1; ++c) {
           var thin_point = false;
           var arr = [
             [grid[r - 1][c - 1], grid[r - 1][c], grid[r - 1][c + 1]],
@@ -832,9 +974,9 @@
 
       var str = "";
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
-          var offset = (app.image.width * r + c) * 4;
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          var offset = (app.real_width * r + c) * 4;
           if (grid[r][c] == COLOR_DONT_CARE) {
             str += "&";
           } else if (grid[r][c] == COLOR_WHITE) {
@@ -852,7 +994,7 @@
     // Main function to handle image thinning
     app.processImageThinning = function() {
       var ZhangSuen = {};
-      ZhangSuen.grid = Array(app.image.height);
+      ZhangSuen.grid = Array(app.real_height);
       var threshold = 100;
       
       // Ubah gambar menjadi black-white
@@ -881,11 +1023,10 @@
         app.imageData[i+3] = 255;
 
         column++;
-        if (column == app.image.width) {
+        if (column == app.real_width) {
           column = 0;
           row++;
         }
-
       }
 
       app.showResultImage();
@@ -960,8 +1101,8 @@
       var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
       var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
             app.setPixelValue(c, r, WHITE);
           }
@@ -974,7 +1115,7 @@
 
     app.processImageThinningOCR = function() {
       var ZhangSuen = {};
-      ZhangSuen.grid = Array(app.image.height);
+      ZhangSuen.grid = Array(app.real_height);
       var threshold = 100;
       
       // Ubah gambar menjadi black-white
@@ -1003,7 +1144,7 @@
         app.imageData[i+3] = 255;
 
         column++;
-        if (column == app.image.width) {
+        if (column == app.real_width) {
           column = 0;
           row++;
         }
@@ -1082,8 +1223,8 @@
       var BLACK = new Array(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
       var WHITE = new Array(COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
             app.setPixelValue(c, r, WHITE);
           } else {
@@ -1092,8 +1233,8 @@
         }
       }
 
-      for (var r = 0; r < app.image.height; ++r) {
-        for (var c = 0; c < app.image.width; ++c) {
+      for (var r = 0; r < app.real_height; ++r) {
+        for (var c = 0; c < app.real_width; ++c) {
           if (ZhangSuen.grid[r][c] == COLOR_BLACK) {
             ZhangSuen.grid[r][c] = COLOR_WHITE;
           } else {
@@ -1141,8 +1282,8 @@
       var digit = app.classify(lineJunctions, endPoints);
       console.log(digit);
 
-      for (var r = 0; r < app.image.height; r++) {
-        for (var c = 0; c < app.image.width; c++) {
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
           if (ZhangSuen.grid[r][c] == COLOR_WHITE) {
             app.setPixelValue(c, r, WHITE);
           } else {
@@ -1151,12 +1292,18 @@
         }
       }
 
+      for (var i = 0; i < endPoints.length; i++) {
+        app.drawSquare(endPoints[i][1], endPoints[i][0], [255, 0, 0, 255]);
+      }
+      for (var i = 0; i < lineJunctions.length; i++) {
+        app.drawSquare(lineJunctions[i][1], lineJunctions[i][0], [0, 255, 0, 255]);
+      }
+
       app.showResultImage();
       
       viewPredictionResult.style.display = "block";
       txtPredictionChar.textContent = digit;
       txtPredictionASCII.textContent = "[ASCII="+digit.toString().charCodeAt(0)+"]";
-
 
     }
 
@@ -1227,10 +1374,10 @@
 
       else if (endpoint_list.length == 2) {
         if (intersection_list.length == 0) {
-          var var_baris_end_0 = endpoint_list[0][0]/app.image.height;
-          var var_kolom_end_0 = endpoint_list[0][1]/app.image.width;
-          var var_baris_end_1 = endpoint_list[1][0]/app.image.height;
-          var var_kolom_end_1 = endpoint_list[1][1]/app.image.width;
+          var var_baris_end_0 = endpoint_list[0][0]/app.real_height;
+          var var_kolom_end_0 = endpoint_list[0][1]/app.real_width;
+          var var_baris_end_1 = endpoint_list[1][0]/app.real_height;
+          var var_kolom_end_1 = endpoint_list[1][1]/app.real_width;
           
           if (var_baris_end_0 < 0.25) {
           	if (var_kolom_end_1 > 0.5) {
@@ -1389,11 +1536,11 @@
         var r = row + nbrs[i][1];
         var c = column + nbrs[i][0];
 
-        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+        if (r < 0 || c < 0 || r > app.real_height-1 || r > app.real_width-1) {
           continue;
         }
 
-        var offset = (app.image.width * r + c)*4;
+        var offset = (app.real_width * r + c)*4;
         if (app.imageData[offset] == COLOR_BLACK) {
           count++;
         }
@@ -1410,15 +1557,15 @@
         var r = row + nbrs[i][1];
         var c = column + nbrs[i][0];
 
-        if (r < 0 || c < 0 || r > app.image.height-1 || r > app.image.width-1) {
+        if (r < 0 || c < 0 || r > app.real_height-1 || r > app.real_width-1) {
           continue;
         }
 
-        var offset = (app.image.width * r + c)*4;
+        var offset = (app.real_width * r + c)*4;
         if (app.imageData[offset] == COLOR_WHITE) {
           r = row + nbrs[i+1][1];
           c = column + nbrs[i+1][0];
-          offset = (app.image.width * r + c)*4;
+          offset = (app.real_width * r + c)*4;
           if (app.imageData[offset] == COLOR_BLACK) {
             count++;
           }
@@ -1438,7 +1585,7 @@
             var nbr = nbrs[group[i][j]];
             var r = row + nbr[1];
             var c = column + nbr[0];
-            var offset = (app.image.width * r + c)*4;
+            var offset = (app.real_width * r + c)*4;
             if (app.imageData[offset] == COLOR_WHITE) {
                 count++;
                 break;
@@ -1591,7 +1738,7 @@
       // console.log(r_cum);
       // console.log(g_cum);
       // console.log(b_cum);
-      image_size = app.image.width * app.image.height;
+      image_size = app.real_width * app.real_height;
       for (var i = 0; i < r_cum.length; ++i) {
         r_map[i] = Math.abs(Math.round((r_cum[i]-1)*255/image_size));
       }
@@ -1617,11 +1764,23 @@
 
     app.showResultImage = function () {
       var canvas = document.createElement("canvas");
-      canvas.width = app.image.width;
-      canvas.height = app.image.height;
+      canvas.setAttribute("id", "mainCanvas");
+      canvas.width = app.real_width;
+      canvas.height = app.real_height;
       var ctx = canvas.getContext("2d");
       ctx.putImageData(new ImageData(app.imageData, canvas.width, canvas.height), 0, 0);  
       app.imageAfter.src = canvas.toDataURL("img/png");
+    }
+
+    app.drawSquare = function(x, y, color) {
+      for (var i = x-3; i < x+3; i++) {
+        app.setPixelValue(i, y-3, color);
+        app.setPixelValue(i, y+3, color);
+      }
+      for (var i = y-3; i < y+3; i++) {
+        app.setPixelValue(x-3, i, color);
+        app.setPixelValue(x+3, i, color);
+      }
     }
 
     if('serviceWorker' in navigator) {
