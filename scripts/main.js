@@ -3,6 +3,10 @@
 (function() {
     'use strict';
 
+    var script = document.createElement('script');
+    script.src = 'scripts/char_skeleton_grid.js';
+    document.head.appendChild(script);
+
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('select');
       var instances = M.FormSelect.init(elems);
@@ -1287,12 +1291,18 @@
         }
       }
 
+      for (var i = 0; i < endPoints.length; i++) {
+        app.drawSquare(endPoints[i][1], endPoints[i][0], [255, 0, 0, 255]);
+      }
+      for (var i = 0; i < lineJunctions.length; i++) {
+        app.drawSquare(lineJunctions[i][1], lineJunctions[i][0], [0, 255, 0, 255]);
+      }
+
       app.showResultImage();
       
       viewPredictionResult.style.display = "block";
       txtPredictionChar.textContent = digit;
       txtPredictionASCII.textContent = "[ASCII="+digit.toString().charCodeAt(0)+"]";
-
 
     }
 
@@ -1753,11 +1763,23 @@
 
     app.showResultImage = function () {
       var canvas = document.createElement("canvas");
+      canvas.setAttribute("id", "mainCanvas");
       canvas.width = app.real_width;
       canvas.height = app.real_height;
       var ctx = canvas.getContext("2d");
       ctx.putImageData(new ImageData(app.imageData, canvas.width, canvas.height), 0, 0);  
       app.imageAfter.src = canvas.toDataURL("img/png");
+    }
+
+    app.drawSquare = function(x, y, color) {
+      for (var i = x-3; i < x+3; i++) {
+        app.setPixelValue(i, y-3, color);
+        app.setPixelValue(i, y+3, color);
+      }
+      for (var i = y-3; i < y+3; i++) {
+        app.setPixelValue(x-3, i, color);
+        app.setPixelValue(x+3, i, color);
+      }
     }
 
     if('serviceWorker' in navigator) {
