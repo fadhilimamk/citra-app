@@ -5,7 +5,13 @@
 
     var script = document.createElement('script');
     script.src = 'scripts/char_skeleton_grid.js';
+    var script2 = document.createElement('script');
+    script2.src = 'scripts/image_grid.js';
+    var script3 = document.createElement('script');
+    script3.src = 'scripts/zhang_suen.js';
     document.head.appendChild(script);
+    document.head.appendChild(script2);
+    document.head.appendChild(script3);
 
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('select');
@@ -408,6 +414,7 @@
           // console.log(app.imageCtx);
           app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
           app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
+          app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);
           // console.log(app.imageData);
 
           // // prepare canvas and data for processing
@@ -1114,6 +1121,36 @@
     }
 
     app.processImageThinningOCR = function() {
+
+      // make image become black and white
+      app.imageGrid.makeBlackWhite(40);
+
+      // thinning
+      var grid = ImageGrid.convertDataToGrid(app.imageGrid.data, app.imageGrid.height, app.imageGrid.width);
+      var ZS = new  ZhangSuenAlgorithm(grid);
+      ZS.process();
+      app.imageGrid.data = ImageGrid.convertGridToData(ZS.grid);
+
+      // detect character boundary, and get the character grid
+      var char_b_grid = app.imageGrid.getCharacter(); // binary grid
+      var char_skeleton = new CharSkeletonGrid(char_b_grid.grid);
+
+      // processing character grid
+      char_skeleton.calculateEdgeJunction();
+
+      app.imageData = app.imageGrid.data;
+
+      for (var i = 0; i < char_skeleton.prop.data_edge.length; i++) {
+        app.drawSquare(char_skeleton.prop.data_edge[i][0] + char_b_grid.boundary[0][0], char_skeleton.prop.data_edge[i][1] + char_b_grid.boundary[0][1], [0, 255, 0, 255]);
+      }
+      for (var i = 0; i < char_skeleton.prop.data_junction.length; i++) {
+        app.drawSquare(char_skeleton.prop.data_junction[i][0] + char_b_grid.boundary[0][0], char_skeleton.prop.data_junction[i][1] + char_b_grid.boundary[0][1], [0, 0, 255, 255]);
+      }
+
+      app.showResultImage();
+      
+      return;
+
       var ZhangSuen = {};
       ZhangSuen.grid = Array(app.real_height);
       var threshold = 100;
@@ -1773,7 +1810,7 @@
     }
 
     app.drawSquare = function(x, y, color) {
-      for (var i = x-3; i < x+3; i++) {
+      for (var i = x-3; i <= x+3; i++) {
         app.setPixelValue(i, y-3, color);
         app.setPixelValue(i, y+3, color);
       }
