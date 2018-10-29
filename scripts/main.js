@@ -23,6 +23,7 @@
     const MODE_OCR = 2;
     const MODE_THINNING = 3;
     const MODE_THINNING_OCR = 4;
+    const MODE_MEDIAN_FILTER = 5;
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
@@ -306,7 +307,9 @@
         app.mode = MODE_THINNING;
       } else if (mode === 'thinning-ocr') {
         app.mode = MODE_THINNING_OCR;
-      } else { // defailt
+      } else if (mode == 'median-filter') {
+        app.mode = MODE_MEDIAN_FILTER
+      } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
 
@@ -439,6 +442,8 @@
                 app.processImageThinning();
           } else if (app.mode == MODE_THINNING_OCR) {
                 app.processImageThinningOCR();
+          } else if (app.mode == MODE_MEDIAN_FILTER) {
+                app.processImageMedianFilter();
           }
           
         }
@@ -736,6 +741,10 @@
     };
 
     app.getPixelValue = function (x, y) {
+      if (x<0 || y<0 || x>=app.real_width || y>=app.real_height) {
+        return [COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK];
+      }
+
       var arr = [];
       var offset = (app.real_width * y + x) * 4;
       for (var i = 0; i < 4; ++i) {
@@ -1342,6 +1351,52 @@
       txtPredictionChar.textContent = digit;
       txtPredictionASCII.textContent = "[ASCII="+digit.toString().charCodeAt(0)+"]";
 
+    }
+
+    app.processImageMedianFilter = function() {
+      var grid = Array(app.real_height);
+      for (var i=0; i<app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var get_median = function(r, c) {
+        var channel_array = Array(4);
+        for (var i=0; i<4; i++) {
+          channel_array[i] = Array();
+        }
+
+        for (var i=-1; i<=1; i++) {
+          for (var j=-1; j<=1; j++) {
+            var pixel = app.getPixelValue(c+i, r+j);
+            for (var k=0; k<4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i=0; i<4; i++) {
+          var sorted_channel = channel_array[i].sort();
+          result.push(sorted_channel[4]);
+        }
+
+        return result;
+      }
+
+      for (var r=0; r<app.real_height; r++) {
+        for (var c=0; c<app.real_width; c++) {
+          grid[r][c] = get_median(r,c);
+        }
+      }
+
+      for (var r=0; r<app.real_height; r++) {
+        for (var c=0; c<app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+      return;
     }
 
     app.classify_digit = function (intersection_list, endpoint_list) {
