@@ -61,7 +61,145 @@ class CharSkeletonGrid {
     }
 
     // removing "kutil" or "tail" from skeleton
-    prunningSkeleton() {
+    prunningSkeleton(percentage) {
+        // Cetak Gambar di Console
+        var printGridInConsole = function (grid) {
+
+            var str = "";
+
+            for (var r = 0; r < grid.length; r++) {
+                for (var c = 0; c < grid[0].length; c++) {
+                    if (grid[r][c] == SK_COLOR_WHITE) {
+                        str += " ";
+                    } else {
+                        str += "#"
+                    }
+                }
+                str = "\t" + r + "\t" + str;
+                console.log(str);
+                str = "";
+            }
+        }
+
+        var getNextPoint = function(visited_point, point, grid) {
+            var y = point[1];
+            var x = point[0];
+
+            // printGridInConsole(grid);
+
+            if (prev_point == null) {
+                if (isPointInside([x, y + 1], grid)) {
+                    if (grid[y + 1][x] == SK_COLOR_BLACK) return [x, y + 1];
+                }
+                if (isPointInside([x, y - 1], grid)) {
+                    // console.log(x, y - 1);
+                    if (grid[y - 1][x] == SK_COLOR_BLACK) return [x, y - 1];
+                }
+                if (isPointInside([x - 1, y], grid)) {
+                    // console.log(x - 1, y);
+                    if (grid[y][x - 1] == SK_COLOR_BLACK) return [x - 1, y];
+                }
+                if (isPointInside([x + 1, y], grid)) {
+                    // console.log(x + 1, y);
+                    if (grid[y][x + 1] == SK_COLOR_BLACK) return [x + 1, y];
+                }
+                if (isPointInside([x - 1, y - 1], grid)) {
+                    // console.log(x - 1, y - 1);
+                    if (grid[y - 1][x - 1] == SK_COLOR_BLACK) return [x - 1, y - 1];
+                } 
+                if (isPointInside([x - 1, y + 1], grid)) {
+                    // console.log(x - 1, y + 1);
+                    if (grid[y + 1][x - 1] == SK_COLOR_BLACK) return [x - 1, y + 1];
+                }
+                if (isPointInside([x + 1, y - 1], grid)) {
+                    // console.log(x + 1, y - 1);
+                    if (grid[y - 1][x + 1] == SK_COLOR_BLACK) return [x + 1, y - 1];
+                }
+                if (isPointInside([x + 1, y + 1], grid)) {
+                    // console.log(x + 1, y + 1);
+                    if (grid[y + 1][x + 1] == SK_COLOR_BLACK) return [x + 1, y + 1];
+                } 
+            } else {
+                // console.log(prev_point);
+                if (isPointInside([x, y + 1], grid)) {
+                    if ((grid[y + 1][x] == SK_COLOR_BLACK) && !isPointInArray([x, y + 1], visited_point)) return [x, y + 1];
+                }
+                if (isPointInside([x, y - 1], grid) ) {
+                    if ((grid[y - 1][x] == SK_COLOR_BLACK) && !isPointInArray([x, y - 1], visited_point)) return [x, y - 1];
+                }
+                if (isPointInside([x - 1, y], grid)) {
+                    if ((grid[y][x - 1] == SK_COLOR_BLACK) && !isPointInArray([x - 1, y], visited_point)) return [x - 1, y];
+                }
+                if (isPointInside([x + 1, y], grid)) {
+                    if ((grid[y][x + 1] == SK_COLOR_BLACK) && !isPointInArray([x + 1, y], visited_point)) return [x + 1, y];
+                }
+                if (isPointInside([x - 1, y - 1], grid)) {
+                    if ((grid[y - 1][x - 1] == SK_COLOR_BLACK) && !isPointInArray([x - 1, y - 1], visited_point)) return [x - 1, y - 1];
+                }
+                if (isPointInside([x - 1, y + 1], grid)) {
+                    if ((grid[y + 1][x - 1] == SK_COLOR_BLACK) && !isPointInArray([x - 1, y + 1], visited_point)) return [x - 1, y + 1];
+                }
+                if (isPointInside([x + 1, y - 1], grid)) {
+                    if ((grid[y - 1][x + 1] == SK_COLOR_BLACK) && !isPointInArray([x + 1, y - 1], visited_point)) return [x + 1, y - 1];
+                }
+                if (isPointInside([x + 1, y + 1], grid)) {
+                    if ((grid[y + 1][x + 1] == SK_COLOR_BLACK) && !isPointInArray([x + 1, y + 1], visited_point)) return [x + 1, y + 1];
+                }
+            }
+        }
+
+        var isPointInside = function (point, grid) {
+            var width = grid[0].length;
+            var height = grid.length;
+            var y = point[1];
+            var x = point[0];
+            
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                return true;
+            }
+            return false;
+        }
+
+        var isPointInArray = function (point, arr) {
+            for(var i in arr) {
+                if (arr[i][0] == point[0] && arr[i][1] == point[1]) return true;
+            }
+            return false;
+        }
+
+        var max_length = percentage * this.diagonal / 100;
+
+        if (this.prop.data_junction.length > 0) {
+            for (var idx in this.prop.data_edge) {
+                var prev_point = null;
+                var curr_point = this.prop.data_edge[idx];
+                var visited_point = [];
+                visited_point.push(curr_point);
+                var next_point = getNextPoint(visited_point, curr_point, this.grid);
+                
+                var tail_length = 1;
+                var found = false;
+                while (!found) {
+                    prev_point = curr_point;
+                    curr_point = next_point;
+                    visited_point.push(curr_point);
+                    var next_point = getNextPoint(visited_point, curr_point, this.grid);
+                    // console.log("i: ", i);
+                    // console.log(curr_point);
+                    // console.log(next_point);
+                    tail_length++;
+                    found = isPointInArray(next_point, this.prop.data_junction);
+                }
+    
+                console.log("jarak titik ", this.prop.data_edge[idx], " ke intersect: ",  i);
+                if (tail_length <= max_length) {
+                    console.log("PRUNING");
+                    for(var i in visited_point) {
+                        this.grid[visited_point[i][1]][visited_point[i][0]] = SK_COLOR_WHITE;
+                    }
+                }
+            }
+        }
 
     }
 

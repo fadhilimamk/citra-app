@@ -207,8 +207,8 @@
       imageData: null,
       real_width: null,
       real_height:null,
-      // mode: MODE_THINNING
-      mode: MODE_HIST_EQUAL
+      mode: MODE_THINNING_OCR
+      // mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
 
@@ -1146,6 +1146,19 @@
 
       // processing character grid
       char_skeleton.calculateEdgeJunction();
+      // console.log("COBA");
+      // console.log(char_skeleton.prop.data_junction);
+      // console.log(char_skeleton.prop.data_edge);
+      char_skeleton.prunningSkeleton(15);
+
+      for (var y = 0; y < char_skeleton.height; y++) {
+        for (var x = 0; x < char_skeleton.width; x++) {
+          if (char_skeleton.grid[y][x] == SK_COLOR_WHITE) {
+            var idx = (y + char_b_grid.boundary[0][1]) *app.real_width + x + char_b_grid.boundary[0][0];
+            app.imageGrid.setImagePixel(x + char_b_grid.boundary[0][0], y + char_b_grid.boundary[0][1], IG_COLOR_WHITE);
+          }
+        }
+      }
 
       app.imageData = app.imageGrid.data;
 
