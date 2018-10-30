@@ -192,9 +192,9 @@ class CharSkeletonGrid {
                     found = isPointInArray(next_point, this.prop.data_junction);
                 }
     
-                console.log("jarak titik ", this.prop.data_edge[idx], " ke intersect: ",  tail_length);
+                // console.log("jarak titik ", this.prop.data_edge[idx], " ke intersect: ",  tail_length);
                 if (tail_length <= max_length) {
-                    console.log("PRUNING");
+                    // console.log("PRUNING");
                     for(var i in visited_point) {
                         this.grid[visited_point[i][1]][visited_point[i][0]] = SK_COLOR_WHITE;
                     }

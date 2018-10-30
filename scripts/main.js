@@ -1159,6 +1159,9 @@
 
       app.imageData = app.imageGrid.data;
 
+      char_skeleton = new CharSkeletonGrid(char_b_grid.grid);
+      char_skeleton.calculateEdgeJunction();
+
       for (var i = 0; i < char_skeleton.prop.data_edge.length; i++) {
         app.drawSquare(char_skeleton.prop.data_edge[i][0] + char_b_grid.boundary[0][0], char_skeleton.prop.data_edge[i][1] + char_b_grid.boundary[0][1], [0, 255, 0, 255]);
       }
