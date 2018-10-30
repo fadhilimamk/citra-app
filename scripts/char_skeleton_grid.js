@@ -179,6 +179,7 @@ class CharSkeletonGrid {
                 
                 var tail_length = 1;
                 var found = false;
+                found = isPointInArray(next_point, this.prop.data_junction);
                 while (!found) {
                     prev_point = curr_point;
                     curr_point = next_point;
@@ -191,7 +192,7 @@ class CharSkeletonGrid {
                     found = isPointInArray(next_point, this.prop.data_junction);
                 }
     
-                console.log("jarak titik ", this.prop.data_edge[idx], " ke intersect: ",  i);
+                console.log("jarak titik ", this.prop.data_edge[idx], " ke intersect: ",  tail_length);
                 if (tail_length <= max_length) {
                     console.log("PRUNING");
                     for(var i in visited_point) {

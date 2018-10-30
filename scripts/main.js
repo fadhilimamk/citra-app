@@ -1146,9 +1146,6 @@
 
       // processing character grid
       char_skeleton.calculateEdgeJunction();
-      // console.log("COBA");
-      // console.log(char_skeleton.prop.data_junction);
-      // console.log(char_skeleton.prop.data_edge);
       char_skeleton.prunningSkeleton(15);
 
       for (var y = 0; y < char_skeleton.height; y++) {
