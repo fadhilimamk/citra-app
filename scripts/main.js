@@ -1158,7 +1158,9 @@
       }
 
       app.imageData = app.imageGrid.data;
-
+      
+      char_b_grid = app.imageGrid.getCharacter(); // binary grid
+      app.imageGrid.drawBorder(char_b_grid.boundary);
       char_skeleton = new CharSkeletonGrid(char_b_grid.grid);
       char_skeleton.calculateEdgeJunction();
 

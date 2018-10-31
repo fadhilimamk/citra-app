@@ -62,17 +62,6 @@ class ImageGrid {
             }
         }
 
-        // draw border
-        for (var y = min_y-1; y < max_y+1; y++) {
-            this.setImagePixel(min_x-1, y, IG_COLOR_RED);
-            this.setImagePixel(max_x+1, y, IG_COLOR_RED);
-        }
-        for (var x = min_x-1; x <= max_x+1; x++) {
-            this.setImagePixel(x, min_y-1, IG_COLOR_RED);
-            this.setImagePixel(x, max_y+1, IG_COLOR_RED);
-        }
-        
-
         return {
             grid: char_grid,
             boundary: boundary
@@ -87,6 +76,24 @@ class ImageGrid {
         for (var i = y-3; i < y+3; i++) {
             this.setImagePixel(x-3, i, color);
             this.setImagePixel(x+3, i, color);
+        }
+    }
+
+
+    // draw border
+    drawBorder(boundary) {
+        var min_x = boundary[0][0];
+        var min_y = boundary[0][1];
+        var max_x = boundary[1][0];
+        var max_y = boundary[1][1];
+        
+        for (var y = min_y - 1; y < max_y + 1; y++) {
+            this.setImagePixel(min_x - 1, y, IG_COLOR_RED);
+            this.setImagePixel(max_x + 1, y, IG_COLOR_RED);
+        }
+        for (var x = min_x - 1; x <= max_x + 1; x++) {
+            this.setImagePixel(x, min_y - 1, IG_COLOR_RED);
+            this.setImagePixel(x, max_y + 1, IG_COLOR_RED);
         }
     }
 
