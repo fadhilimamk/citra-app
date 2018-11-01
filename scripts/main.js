@@ -42,9 +42,9 @@
       imageData: null,
       real_width: null,
       real_height:null,
-      mode: MODE_GRADIENT_FILTER
+      // mode: MODE_GRADIENT_FILTER
       // mode: MODE_THINNING_OCR
-      // mode: MODE_HIST_EQUAL
+      mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
 
@@ -901,11 +901,25 @@
           }
         }
 
+
         var result = Array();
         for (var i = 0; i < 4; i++) {
-          console.log(channel_array[i]);
-          // var sorted_channel = channel_array[i].sort();
-          // result.push(sorted_channel[4]);
+          var val = Math.max(
+            Math.abs(channel_array[i][0] - channel_array[i][4]),
+            Math.abs(channel_array[i][1] - channel_array[i][4]),
+            Math.abs(channel_array[i][2] - channel_array[i][4]),
+            Math.abs(channel_array[i][3] - channel_array[i][4]),
+            Math.abs(channel_array[i][5] - channel_array[i][4]),
+            Math.abs(channel_array[i][6] - channel_array[i][4]),
+            Math.abs(channel_array[i][7] - channel_array[i][4]),
+            Math.abs(channel_array[i][8] - channel_array[i][4]));
+
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            result.push(val);
+          }
+
         }
 
         return result;
