@@ -24,6 +24,7 @@ class CharSkeletonGrid {
             // number of edge and junction, per sector (up, bottom, left, right)
             n_edge: 0,
             n_junction: 0,
+
             n_edge_top: 0,
             n_edge_bottom: 0,
             n_edge_left: 0,
@@ -44,7 +45,11 @@ class CharSkeletonGrid {
             percent_code_4: 0,
             percent_code_5: 0,
             percent_code_6: 0,
-            percent_code_7: 0
+            percent_code_7: 0,
+
+            percent_code_horizontal: 0,
+            percent_code_vertical: 0,
+            percent_code_diagonal: 0
         };
     }
 
@@ -205,8 +210,20 @@ class CharSkeletonGrid {
     }
 
     // calculating chain code percentage
-    calculateCodePercentage() {
+    setCodePercentage(code_percentage) {
+        // console.log(code_percentage);
+        this.prop.percent_code_0 = code_percentage[0];
+        this.prop.percent_code_1 = code_percentage[1];
+        this.prop.percent_code_2 = code_percentage[2];
+        this.prop.percent_code_3 = code_percentage[3];
+        this.prop.percent_code_4 = code_percentage[4];
+        this.prop.percent_code_5 = code_percentage[5];
+        this.prop.percent_code_6 = code_percentage[6];
+        this.prop.percent_code_7 = code_percentage[7];
 
+        this.prop.percent_code_diagonal = (code_percentage[1] + code_percentage[3] + code_percentage[5] + code_percentage[7]) / parseFloat(4);
+        this.prop.percent_code_vertical = (code_percentage[0] + code_percentage[4]) / parseFloat(2);
+        this.prop.percent_code_horizontal = (code_percentage[2] + code_percentage[6]) / parseFloat(2);
     }
 
     // calculate edge and junction from character skeleton
@@ -248,7 +265,7 @@ class CharSkeletonGrid {
         }
 
 
-        // combine junction with distance less than 10 px
+        // combine junction with distance less than 20% of diagonal
         if (data_temp_junction.length > 2) {
             var prev_idx = 0;
             this.prop.data_junction.push(data_temp_junction[0]);
@@ -264,6 +281,29 @@ class CharSkeletonGrid {
         console.log(0.2 * this.diagonal);
         console.log(this.prop.data_junction);
 
+        this.prop.n_edge = this.prop.data_edge.length;
+        this.prop.n_junction = this.prop.data_junction.length;
+    }
+
+    calculateEdgeJunctionRegion(percentage) {
+
+        if (percentage > 30) percentage = 30;
+        var height_limit = percentage*this.height/100;
+        var width_limit = percentage*this.width/100;
+        for(var i = 0; i < this.prop.data_edge.length; i++) {
+            if (this.prop.data_edge[i][1] < height_limit) this.prop.n_edge_top++;
+            if (this.prop.data_edge[i][1] > this.height - height_limit) this.prop.n_edge_bottom++; 
+            if (this.prop.data_edge[i][0] < width_limit) this.prop.n_edge_left++; 
+            if (this.prop.data_edge[i][0] > this.width - width_limit) this.prop.n_edge_right++; 
+        }
+        for(var i = 0; i < this.prop.data_junction.length; i++) {
+            if (this.prop.data_junction[i][1] < height_limit) this.prop.n_junction_top++;
+            if (this.prop.data_junction[i][1] > this.height - height_limit) this.prop.n_junction_bottom++; 
+            if (this.prop.data_junction[i][0] < width_limit) this.prop.n_junction_left++; 
+            if (this.prop.data_junction[i][0] > this.width - width_limit) this.prop.n_junction_right++; 
+        }
+
+        console.log(this.prop);
     }
 
     // count the number of circular in character
@@ -271,7 +311,7 @@ class CharSkeletonGrid {
         this.n_circular = 0;
     }
 
-    // generate all the character props
+    // generate all the character props, NEVER USE THIS FUNCTION AT THIS TIME!!!
     calculateAllProps() {
         this.prunningSkeleton();
         this.calculateCodePercentage();

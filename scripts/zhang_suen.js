@@ -9,9 +9,12 @@ class ZhangSuenAlgorithm {
         this.grid = grid;
         this.nbrs = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]];
         this.nbrGroups = [[[0, 2, 4], [2, 4, 6]], [[0, 2, 6], [0, 4, 6]]];
+        this.code_percentage = []
     }
 
     process() {
+
+        this.calculateCodePercentage();
 
         function Point(x, y) {
             this.x = x;
@@ -47,6 +50,107 @@ class ZhangSuenAlgorithm {
         } while ((firstStep || hasChanged));
 
         return this.grid;
+    }
+
+    calculateCodePercentage() {
+        var first_black_x = 0;
+        var first_black_y = 0;
+        var found_first_black = false;
+
+        // find starting point
+        var x = 0;
+        var y = 0;
+        while (!found_first_black && y < this.grid.length) {
+            if (this.grid[y][x][0] == ZS_COLOR_BLACK) {
+                first_black_x = x;
+                first_black_y = y;
+                found_first_black = true;
+            }
+
+            x++;
+            if (x == this.grid[0].length) {
+                x = 0;
+                y++;
+            }
+        }
+        // console.log("first_x y " + first_black_x + " " + first_black_y);
+
+        var getGridValue = function(x, y, grid) {
+            return grid[y][x][0];
+        }
+
+        var x = first_black_x, y = first_black_y;
+        var count_code = [0, 0, 0, 0, 0, 0, 0, 0];
+        // 7 0 1
+        // 6 x 2
+        // 5 4 3
+        var count = 0;
+
+        do {
+            var code = 0;
+            
+            // find white to black pixel around
+            if (getGridValue(x-1, y-1, this.grid) == ZS_COLOR_WHITE && getGridValue(x, y-1, this.grid) == ZS_COLOR_BLACK)
+                code = 0;
+            else if (getGridValue(x, y-1, this.grid) == ZS_COLOR_WHITE && getGridValue(x+1, y-1, this.grid) == ZS_COLOR_BLACK)
+                code = 1;
+            else if (getGridValue(x+1, y-1, this.grid) == ZS_COLOR_WHITE && getGridValue(x+1, y, this.grid) == ZS_COLOR_BLACK)
+                code = 2;
+            else if (getGridValue(x+1, y, this.grid) == ZS_COLOR_WHITE && getGridValue(x+1, y+1, this.grid) == ZS_COLOR_BLACK)
+                code = 3;
+            else if (getGridValue(x+1, y+1, this.grid) == ZS_COLOR_WHITE && getGridValue(x, y+1, this.grid) == ZS_COLOR_BLACK)
+                code = 4;
+            else if (getGridValue(x, y+1, this.grid) == ZS_COLOR_WHITE && getGridValue(x-1, y+1, this.grid) == ZS_COLOR_BLACK)
+                code = 5;
+            else if (getGridValue(x-1, y+1, this.grid) == ZS_COLOR_WHITE && getGridValue(x-1, y, this.grid) == ZS_COLOR_BLACK)
+                code = 6;
+            else if (getGridValue(x-1, y, this.grid) == ZS_COLOR_WHITE && getGridValue(x-1, y-1, this.grid) == ZS_COLOR_BLACK)
+                code = 7;
+
+            count_code[code]++;
+            
+            // change current position to that position
+            if (code == 0) {
+                x = x; y = y-1;
+            } else if (code == 1) {
+                x = x+1; y = y-1;
+            } else if (code == 2) {
+                x = x+1; y = y;
+            } else if (code == 3) {
+                x = x+1; y = y+1;
+            } else if (code == 4) {
+                x = x; y = y+1;
+            } else if (code == 5) {
+                x = x-1; y = y+1;
+            } else if (code == 6) {
+                x = x-1; y = y;
+            } else if (code == 7) {
+                x = x-1; y = y-1;
+            }
+
+            // console.log(code);
+            count++;
+            if (count == 1000) {
+                x = first_black_x;
+                y = first_black_y;
+            }
+
+        } while (x != first_black_x || y != first_black_y);
+
+        // console.log(count_code);
+        
+        // calculate percentage
+        var height = parseFloat(this.grid.length);
+        var width = parseFloat(this.grid[0].length);
+        var diagonal = parseFloat(Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+        for (var i = 0; i < count_code.length; i++) {
+            count_code[i] = parseFloat(count_code[i]);
+            if (i == 0 || i == 4) count_code[i] = count_code[i]/height;
+            if (i == 2 || i == 6) count_code[i] = count_code[i]/width;
+            if (i == 7 || i == 3 || i == 1 || i == 5) count_code[i] = count_code[i]/diagonal;
+        }
+
+        this.code_percentage = count_code;
     }
 
 
