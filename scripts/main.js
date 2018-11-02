@@ -159,6 +159,8 @@
         app.mode = MODE_DIFFERENCE_FILTER;
       } else if (mode == 'prewitt-filter') {
         app.mode = MODE_PREWITT_FILTER;
+      } else if (mode == 'sobel-filter') {
+        app.mode = MODE_SOBEL_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -291,6 +293,8 @@
                 app.processImageDifferenceFilter();
           } else if (app.mode == MODE_PREWITT_FILTER) {
                 app.processImagePrewittFilter();
+          } else if (app.mode == MODE_SOBEL_FILTER) {
+                app.processImageSobelFilter();
           }
           
         }
@@ -1013,6 +1017,70 @@
       for (var r = 0; r < app.real_height; r++) {
         for (var c = 0; c < app.real_width; c++) {
           grid[r][c] = getPrewitt(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+
+    app.processImageSobelFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getSobel = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var filter_vertical = [-1, 0, 1,
+            -2, 0, 2,
+            -1, 0, 1];
+
+        // HORISONTAL
+        var filter_horisontal = [-1, -2, -1, 
+            0, 0, 0,
+            1, 2, 1];
+    
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val_ver = app.dotProduct(filter_vertical, channel_array[i]);
+            var val_hor = app.dotProduct(filter_horisontal, channel_array[i]);
+            var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getSobel(r, c);
         }
       }
 
