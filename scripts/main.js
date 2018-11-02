@@ -163,6 +163,8 @@
         app.mode = MODE_SOBEL_FILTER;
       } else if (mode == 'roberts-filter') {
         app.mode = MODE_ROBERTS_FILTER;
+      } else if (mode == 'freichen-filter') {
+        app.mode = MODE_FREICHEN_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -299,6 +301,8 @@
                 app.processImageSobelFilter();
           } else if (app.mode == MODE_ROBERTS_FILTER) {
                 app.processImageRobertsFilter();
+          } else if (app.mode == MODE_FREICHEN_FILTER) {
+                app.processImageFreichenFilter();
           }
           
         }
@@ -1143,6 +1147,78 @@
       for (var r = 0; r < app.real_height; r++) {
         for (var c = 0; c < app.real_width; c++) {
           grid[r][c] = getRoberts(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+    app.processImageFreichenFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getFreichen = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var F1 = [1, Math.sqrt(2), 1,
+          0, 0, 0,
+          -1, -Math.sqrt(2), -1];
+
+        var F2 = [1, 0, -1,
+          Math.sqrt(2), 0, -Math.sqrt(2),
+          1, 0, -1];
+
+        var F3 = [0, -1, Math.sqrt(2),
+          1, 0, -1,
+          -Math.sqrt(2), 1, 0];
+
+        var F4 = [Math.sqrt(2), -1, 0,
+          -1, 0, 1,
+          0, 1, -Math.sqrt(2)];
+
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val1 = app.dotProduct(F1, channel_array[i]);
+            var val2 = app.dotProduct(F2, channel_array[i]);
+            var val3 = app.dotProduct(F3, channel_array[i]);
+            var val4 = app.dotProduct(F4, channel_array[i]);
+            var val = Math.sqrt((val1 * val1 + val2 * val2 + val3 * val3 + val4 * val4) / 8);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getFreichen(r, c);
         }
       }
 
