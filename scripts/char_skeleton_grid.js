@@ -150,6 +150,8 @@ class CharSkeletonGrid {
                 if (isPointInside([x + 1, y + 1], grid)) {
                     if ((grid[y + 1][x + 1] == SK_COLOR_BLACK) && !isPointInArray([x + 1, y + 1], visited_point)) return [x + 1, y + 1];
                 }
+
+                return [-1, -1];
             }
         }
 
@@ -158,7 +160,7 @@ class CharSkeletonGrid {
             var height = grid.length;
             var y = point[1];
             var x = point[0];
-            
+
             if (x >= 0 && x < width && y >= 0 && y < height) {
                 return true;
             }
@@ -184,6 +186,7 @@ class CharSkeletonGrid {
                 
                 var tail_length = 1;
                 var found = false;
+                // console.log(next_point, this.prop.data_junction);
                 found = isPointInArray(next_point, this.prop.data_junction);
                 while (!found) {
                     prev_point = curr_point;
@@ -194,6 +197,9 @@ class CharSkeletonGrid {
                     // console.log(curr_point);
                     // console.log(next_point);
                     tail_length++;
+
+                    if (next_point[0] == -1 && next_point[1] == -1) break;
+
                     found = isPointInArray(next_point, this.prop.data_junction);
                 }
     
