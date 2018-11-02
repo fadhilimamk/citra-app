@@ -26,10 +26,17 @@
     const MODE_MEDIAN_FILTER = 5;
     const MODE_GRADIENT_FILTER = 6;
     const MODE_DIFFERENCE_FILTER = 7;
+    const MODE_PREWITT_FILTER = 8;
+    const MODE_SOBEL_FILTER = 9;
+    const MODE_ROBERTS_FILTER = 11;
+    const MODE_FREICHEN_FILTER = 12;
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
-    const COLOR_DONT_CARE = 99;
+
+    // direction for filter
+    const DIRECTION_VERTICAL = 0;
+    const DIRECTION_HORISONTAL = 0;
 
     var app = {
       isLoading: true,
@@ -42,9 +49,9 @@
       imageData: null,
       real_width: null,
       real_height:null,
-      // mode: MODE_GRADIENT_FILTER
+      mode: MODE_PREWITT_FILTER
       // mode: MODE_THINNING_OCR
-      mode: MODE_HIST_EQUAL
+      // mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
         // 1 Histogram Specification
 
@@ -150,6 +157,8 @@
         app.mode = MODE_GRADIENT_FILTER;
       } else if (mode == 'difference-filter') {
         app.mode = MODE_DIFFERENCE_FILTER;
+      } else if (mode == 'prewitt-filter') {
+        app.mode = MODE_PREWITT_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -229,40 +238,6 @@
    *
    ****************************************************************************/
 
-   // training
-    // console.log("start training...");
-    // var image_path = "/citra-uji/handwritten_char/";
-    // var next = false;
-    // for(var i = 31; i <= 127; i++) {
-    //   var image_file = image_path + i + ".jpg";
-    //   app.image.src = image_file;
-    //   var training_img = new Image();
-    //   training_img.src = image_file;
-    //   console.log( image_file + " loaded!");
-
-
-    //   training_img.onload = function() {
-    //     app.real_height = this.height;
-    //     app.real_width = this.width;
-
-    //     app.imageCanvas.width = this.width;
-    //     app.imageCanvas.height = this.height;
-    //     app.imageCtx = app.imageCanvas.getContext('2d');
-    //     app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
-    //     app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
-    //     app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);
-
-    //     viewDesiredHistogram.style.display = "none";
-
-    //     console.log("get data for " + i);
-    //     app.processImageThinningOCR();
-    //     next = true;
-    //   }
-
-    //   while (!next) {}
-    //   next = false;
-    // }
-
     // Display selected image to imgBefore, then start to process the histogram
     app.processImage = function(image) {
       var reader = new FileReader();
@@ -295,15 +270,6 @@
           app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);
           // console.log(app.imageData);
 
-          // // prepare canvas and data for processing
-          // app.imageCanvas.width = app.real_width;
-          // app.imageCanvas.height = app.real_height;
-          // app.imageCtx = app.imageCanvas.getContext('2d');
-          // console.log(app.imageCtx);
-          // app.imageCtx.drawImage(app.image, 0, 0, app.real_width, app.real_height);
-          // app.imageData = app.imageCtx.getImageData(0, 0, app.real_width, app.real_height).data;
-          // console.log(app.imageData);
-
           viewDesiredHistogram.style.display = "none";
 
           // check mode
@@ -323,6 +289,8 @@
                 app.processImageGradientFilter();
           } else if (app.mode == MODE_DIFFERENCE_FILTER) {
                 app.processImageDifferenceFilter();
+          } else if (app.mode == MODE_PREWITT_FILTER) {
+                app.processImagePrewittFilter();
           }
           
         }
@@ -943,19 +911,20 @@
 
         var result = Array();
         for (var i = 0; i < 4; i++) {
-          var val = Math.max(
-            Math.abs(channel_array[i][0] - channel_array[i][4]),
-            Math.abs(channel_array[i][1] - channel_array[i][4]),
-            Math.abs(channel_array[i][2] - channel_array[i][4]),
-            Math.abs(channel_array[i][3] - channel_array[i][4]),
-            Math.abs(channel_array[i][5] - channel_array[i][4]),
-            Math.abs(channel_array[i][6] - channel_array[i][4]),
-            Math.abs(channel_array[i][7] - channel_array[i][4]),
-            Math.abs(channel_array[i][8] - channel_array[i][4]));
-
+          
           if (i == 3) {
             result.push(COLOR_WHITE);
           } else {
+            var val = Math.max(
+              Math.abs(channel_array[i][0] - channel_array[i][4]),
+              Math.abs(channel_array[i][1] - channel_array[i][4]),
+              Math.abs(channel_array[i][2] - channel_array[i][4]),
+              Math.abs(channel_array[i][3] - channel_array[i][4]),
+              Math.abs(channel_array[i][5] - channel_array[i][4]),
+              Math.abs(channel_array[i][6] - channel_array[i][4]),
+              Math.abs(channel_array[i][7] - channel_array[i][4]),
+              Math.abs(channel_array[i][8] - channel_array[i][4]));
+            
             result.push(val);
           }
 
@@ -977,6 +946,84 @@
       }
 
       app.showResultImage();
+      return;
+    }
+
+
+    app.dotProduct = function (arr1, arr2) {
+      var ret = 0;
+      // console.log(arr1.length);
+      // console.log(arr2.length);
+      if (arr1.length == arr2.length) {
+        for (var idx in arr1) {
+          ret += arr1[idx] * arr2[idx];
+        }
+      }
+
+      return ret;
+    }
+
+
+    app.processImagePrewittFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getPrewitt = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var filter_vertical = [-1, 0, 1,
+            -1, 0, 1,
+            -1, 0, 1];
+
+        // HORISONTAL
+        var filter_horisontal = [-1, -1, -1, 
+            0, 0, 0,
+            1, 1, 1];
+    
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val_ver = app.dotProduct(filter_vertical, channel_array[i]);
+            var val_hor = app.dotProduct(filter_horisontal, channel_array[i]);
+            var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getPrewitt(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
       return;
     }
 
