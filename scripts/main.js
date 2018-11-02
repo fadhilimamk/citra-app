@@ -229,40 +229,6 @@
    *
    ****************************************************************************/
 
-   // training
-    // console.log("start training...");
-    // var image_path = "/citra-uji/handwritten_char/";
-    // var next = false;
-    // for(var i = 31; i <= 127; i++) {
-    //   var image_file = image_path + i + ".jpg";
-    //   app.image.src = image_file;
-    //   var training_img = new Image();
-    //   training_img.src = image_file;
-    //   console.log( image_file + " loaded!");
-
-
-    //   training_img.onload = function() {
-    //     app.real_height = this.height;
-    //     app.real_width = this.width;
-
-    //     app.imageCanvas.width = this.width;
-    //     app.imageCanvas.height = this.height;
-    //     app.imageCtx = app.imageCanvas.getContext('2d');
-    //     app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
-    //     app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
-    //     app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);
-
-    //     viewDesiredHistogram.style.display = "none";
-
-    //     console.log("get data for " + i);
-    //     app.processImageThinningOCR();
-    //     next = true;
-    //   }
-
-    //   while (!next) {}
-    //   next = false;
-    // }
-
     // Display selected image to imgBefore, then start to process the histogram
     app.processImage = function(image) {
       var reader = new FileReader();
