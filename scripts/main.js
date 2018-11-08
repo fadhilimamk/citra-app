@@ -176,16 +176,17 @@
       }
 
       // reset all after mode changed
-      if (app.imageRaw != null) {
-        app.imageRaw = null;
-        app.image.src = 'images/empty.png';
-        app.imageAfter.src = 'images/empty.png';
-        inputImageCamera.value = '';
-        inputImageGallery.value = '';
-        viewHistogram.style.display = 'none';
-        viewPredictionResult.style.display = 'none';
-        inputHistogram.style.display = 'none';
-      }
+      app.imageRaw = null;
+      app.image.src = 'images/empty.png';
+      app.imageAfter.src = 'images/empty.png';
+      inputImageCamera.value = '';
+      inputImageGallery.value = '';
+      viewHistogram.style.display = 'none';
+      viewPredictionResult.style.display = 'none';
+      inputHistogram.style.display = 'none';
+      viewFilterOptions.style.display = 'none';
+      viewCustomInput.style.display = 'none';
+      inputFilterMode.selectedIndex = "0";
 
       if (app.mode == MODE_FILTER) {
         viewFilterOptions.style.display = 'block';
