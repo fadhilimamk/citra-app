@@ -72,14 +72,7 @@
           <option value="ocr">Character Detection (Chain Code)</option>
           <option value="thinning">Character Thinning</option>
           <option value="thinning-ocr">Character Detection</option>
-          <option value="median-filter">Median Filter</option>
-          <option value="gradient-filter">Gradient Filter</option>
-          <option value="difference-filter">Difference Filter</option>
-          <option value="prewitt-filter">Prewitt Filter</option>
-          <option value="sobel-filter">Sobel Filter</option>
-          <option value="roberts-filter">Roberts Filter</option>
-          <option value="freichen-filter">Freichen Filter</option>
-          <option value="custom-filter">Custom Filter</option>
+          <option value="filter">Image Filter</option>
         </select>
         <label>Select mode:</label>
       </div>
@@ -107,6 +100,67 @@
       
     </div>
   </div>
+
+  <span id="filterInputOptionsView" hidden>
+    <div class="row" style="margin-bottom:3px; margin-top:15px">
+      <div class="col s12">
+        <div class="input-field col s12" style="margin-bottom:5px">
+          <select id="filter-mode">
+            <option value="median-filter">Median Filter</option>
+            <option value="gradient-filter">Gradient Filter</option>
+            <option value="difference-filter">Difference Filter</option>
+            <option value="prewitt-filter">Prewitt Filter</option>
+            <option value="sobel-filter">Sobel Filter</option>
+            <option value="roberts-filter">Roberts Filter</option>
+            <option value="freichen-filter">Freichen Filter</option>
+            <option value="custom-filter">Custom Filter</option>
+          </select>
+          <label>Select filter:</label>
+        </div>
+      </div>
+    </div>
+    <span id="customFilterInput" hidden>
+      <div class="row center">
+        <div class="col s2 offset-s3 center">
+          <input placeholder="0" id="filter_1" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_2" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_3" type="number" class="center">
+        </div>
+      </div>
+      <div class="row center">
+        <div class="col s2 offset-s3 center">
+          <input placeholder="0" id="filter_4" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_5" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_6" type="number" class="center">
+        </div>
+      </div>
+      <div class="row center">
+        <div class="col s2 offset-s3 center">
+          <input placeholder="0" id="filter_7" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_8" type="number" class="center">
+        </div>
+        <div class="col s2 center">
+          <input placeholder="0" id="filter_9" type="number" class="center">
+        </div>
+      </div>
+    </span>
+    <div class="row">
+      <div class="col s12 center">
+        <a class="waves-effect waves-light btn blue darken-1" id="btnProcessFilter" style="width:100%">Process</a>
+      </div>
+    </div>
+
+  </span>
 
   <hr>
 

@@ -23,6 +23,7 @@
     const MODE_OCR = 2;
     const MODE_THINNING = 3;
     const MODE_THINNING_OCR = 4;
+    const MODE_FILTER = 99;
     const MODE_MEDIAN_FILTER = 5;
     const MODE_GRADIENT_FILTER = 6;
     const MODE_DIFFERENCE_FILTER = 7;
@@ -31,6 +32,15 @@
     const MODE_ROBERTS_FILTER = 11;
     const MODE_FREICHEN_FILTER = 12;
     const MODE_CUSTOM_FILTER = 13;
+
+    const MODE_FILTER_MEDIAN = 5;
+    const MODE_FILTER_GRADIENT = 6;
+    const MODE_FILTER_DIFFERENCE = 7;
+    const MODE_FILTER_PREWITT = 8;
+    const MODE_FILTER_SOBEL = 9;
+    const MODE_FILTER_ROBERTS = 11;
+    const MODE_FILTER_FREICHEN = 12;
+    const MODE_FILTER_CUSTOM = 13;
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
@@ -52,9 +62,11 @@
       real_height:null,
       // mode: MODE_PREWITT_FILTER
       // mode: MODE_THINNING_OCR
-      mode: MODE_HIST_EQUAL
+      mode: MODE_HIST_EQUAL,
         // 0 Histogram Equalization
         // 1 Histogram Specification
+
+      filter_mode: MODE_FILTER_MEDIAN
 
     };
 
@@ -140,6 +152,11 @@
     var txtPredictionASCII = document.getElementById("predictedASCII");
     var txtChainCodeResult = document.getElementById("chainCodeResult");
 
+    var viewFilterOptions = document.getElementById("filterInputOptionsView");
+    var viewCustomInput = document.getElementById("customFilterInput");
+    var inputFilterMode = document.getElementById("filter-mode");
+    var btnProcessFilter = document.getElementById("btnProcessFilter");
+
     inputMode.addEventListener('change', function() {
       var mode = inputMode.options[inputMode.selectedIndex].value;
       if (mode === 'equalization') {
@@ -152,22 +169,8 @@
         app.mode = MODE_THINNING;
       } else if (mode === 'thinning-ocr') {
         app.mode = MODE_THINNING_OCR;
-      } else if (mode == 'median-filter') {
-        app.mode = MODE_MEDIAN_FILTER;
-      } else if (mode == 'gradient-filter') {
-        app.mode = MODE_GRADIENT_FILTER;
-      } else if (mode == 'difference-filter') {
-        app.mode = MODE_DIFFERENCE_FILTER;
-      } else if (mode == 'prewitt-filter') {
-        app.mode = MODE_PREWITT_FILTER;
-      } else if (mode == 'sobel-filter') {
-        app.mode = MODE_SOBEL_FILTER;
-      } else if (mode == 'roberts-filter') {
-        app.mode = MODE_ROBERTS_FILTER;
-      } else if (mode == 'freichen-filter') {
-        app.mode = MODE_FREICHEN_FILTER;
-      } else if (mode == 'custom-filter') {
-        app.mode = MODE_CUSTOM_FILTER;
+      } else if (mode === 'filter') {
+        app.mode = MODE_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -182,6 +185,67 @@
         viewHistogram.style.display = 'none';
         viewPredictionResult.style.display = 'none';
         inputHistogram.style.display = 'none';
+      }
+
+      if (app.mode == MODE_FILTER) {
+        viewFilterOptions.style.display = 'block';
+        viewCustomInput.style.display = 'none';
+      }
+
+    });
+
+    inputFilterMode.addEventListener('change', function() {
+      var filterMode = inputFilterMode.options[inputFilterMode.selectedIndex].value;
+
+      viewCustomInput.style.display = 'none';
+
+      if (filterMode == 'median-filter') {
+        app.filter_mode = MODE_FILTER_MEDIAN;
+      } else if (filterMode == 'gradient-filter') {
+        app.filter_mode = MODE_FILTER_GRADIENT;
+      } else if (filterMode == 'difference-filter') {
+        app.filter_mode = MODE_FILTER_DIFFERENCE;
+      } else if (filterMode == 'prewitt-filter') {
+        app.filter_mode = MODE_FILTER_PREWITT;
+      } else if (filterMode == 'sobel-filter') {
+        app.filter_mode = MODE_FILTER_SOBEL;
+      } else if (filterMode == 'roberts-filter') {
+        app.filter_mode = MODE_FILTER_ROBERTS;
+      } else if (filterMode == 'freichen-filter') {
+        app.filter_mode = MODE_FILTER_FREICHEN;
+      } else if (filterMode == 'custom-filter') {
+        app.filter_mode = MODE_FILTER_CUSTOM;
+        viewCustomInput.style.display = 'block';
+      } else { // default
+        app.filter_mode = MODE_FILTER_MEDIAN;
+      }
+
+      // reset image after
+      app.imageAfter.src = 'images/empty.png';
+
+    });
+
+    btnProcessFilter.addEventListener('click', function() {
+
+      // check if image empty
+      if (app.imageData == null) return;
+
+      if (app.filter_mode == MODE_FILTER_MEDIAN) {
+        app.processImageMedianFilter();
+      } else if (app.filter_mode == MODE_FILTER_GRADIENT) {
+        app.processImageGradientFilter();
+      } else if (app.filter_mode == MODE_FILTER_DIFFERENCE) {
+        app.processImageDifferenceFilter();
+      } else if (app.filter_mode == MODE_FILTER_PREWITT) {
+        app.processImagePrewittFilter();
+      } else if (app.filter_mode == MODE_FILTER_SOBEL) {
+        app.processImageSobelFilter();
+      } else if (app.filter_mode == MODE_FILTER_ROBERTS) {
+        app.processImageRobertsFilter();
+      } else if (app.filter_mode == MODE_FILTER_FREICHEN) {
+        app.processImageFreichenFilter();
+      } else if (app.filter_mode == MODE_FILTER_CUSTOM) {
+        app.processImageCustomFilter();
       }
 
     });
@@ -292,22 +356,8 @@
                 app.processImageThinning();
           } else if (app.mode == MODE_THINNING_OCR) {
                 app.processImageThinningOCR();
-          } else if (app.mode == MODE_MEDIAN_FILTER) {
-                app.processImageMedianFilter();
-          } else if (app.mode == MODE_GRADIENT_FILTER) {
-                app.processImageGradientFilter();
-          } else if (app.mode == MODE_DIFFERENCE_FILTER) {
-                app.processImageDifferenceFilter();
-          } else if (app.mode == MODE_PREWITT_FILTER) {
-                app.processImagePrewittFilter();
-          } else if (app.mode == MODE_SOBEL_FILTER) {
-                app.processImageSobelFilter();
-          } else if (app.mode == MODE_ROBERTS_FILTER) {
-                app.processImageRobertsFilter();
-          } else if (app.mode == MODE_FREICHEN_FILTER) {
-                app.processImageFreichenFilter();
-          } else if (app.mode == MODE_CUSTOM_FILTER) {
-                app.processImageCustomFilter();
+          } else if (app.mode == MODE_FILTER) {
+                app.processImageMedianFilter(); // default filter process
           }
           
         }
