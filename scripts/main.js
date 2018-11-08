@@ -1298,22 +1298,18 @@
         for (var i = 0; i < 4; i++) {
           channel_array[i] = Array();
         }
-
-        var a = document.getElementById("filter_1").value;
-        var b = document.getElementById("filter_2").value;
-        var c = document.getElementById("filter_3").value;
-        var d = document.getElementById("filter_4").value;
-        var e = document.getElementById("filter_5").value;
-        var f = document.getElementById("filter_6").value;
-        var g = document.getElementById("filter_7").value;
-        var h = document.getElementById("filter_8").value;
-        var j = document.getElementById("filter_9").value;
-
-        console.log(a);
-
-        var custom_filter = [a, b, c,
-                              d, e, f,
-                              g, h, j]
+      
+        var custom_filter = [
+          document.getElementById("filter_1").value,
+          document.getElementById("filter_2").value,
+          document.getElementById("filter_3").value,
+          document.getElementById("filter_4").value,
+          document.getElementById("filter_5").value,
+          document.getElementById("filter_6").value,
+          document.getElementById("filter_7").value,
+          document.getElementById("filter_8").value,
+          document.getElementById("filter_9").value,
+        ]
 
         for (var i = -1; i <= 1; i++) {
           for (var j = -1; j <= 1; j++) {
