@@ -26,10 +26,17 @@
     const MODE_MEDIAN_FILTER = 5;
     const MODE_GRADIENT_FILTER = 6;
     const MODE_DIFFERENCE_FILTER = 7;
+    const MODE_PREWITT_FILTER = 8;
+    const MODE_SOBEL_FILTER = 9;
+    const MODE_ROBERTS_FILTER = 11;
+    const MODE_FREICHEN_FILTER = 12;
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
-    const COLOR_DONT_CARE = 99;
+
+    // direction for filter
+    const DIRECTION_VERTICAL = 0;
+    const DIRECTION_HORISONTAL = 0;
 
     var app = {
       isLoading: true,
@@ -42,7 +49,7 @@
       imageData: null,
       real_width: null,
       real_height:null,
-      // mode: MODE_GRADIENT_FILTER
+      // mode: MODE_PREWITT_FILTER
       // mode: MODE_THINNING_OCR
       mode: MODE_HIST_EQUAL
         // 0 Histogram Equalization
@@ -150,6 +157,14 @@
         app.mode = MODE_GRADIENT_FILTER;
       } else if (mode == 'difference-filter') {
         app.mode = MODE_DIFFERENCE_FILTER;
+      } else if (mode == 'prewitt-filter') {
+        app.mode = MODE_PREWITT_FILTER;
+      } else if (mode == 'sobel-filter') {
+        app.mode = MODE_SOBEL_FILTER;
+      } else if (mode == 'roberts-filter') {
+        app.mode = MODE_ROBERTS_FILTER;
+      } else if (mode == 'freichen-filter') {
+        app.mode = MODE_FREICHEN_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -261,15 +276,6 @@
           app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);
           // console.log(app.imageData);
 
-          // // prepare canvas and data for processing
-          // app.imageCanvas.width = app.real_width;
-          // app.imageCanvas.height = app.real_height;
-          // app.imageCtx = app.imageCanvas.getContext('2d');
-          // console.log(app.imageCtx);
-          // app.imageCtx.drawImage(app.image, 0, 0, app.real_width, app.real_height);
-          // app.imageData = app.imageCtx.getImageData(0, 0, app.real_width, app.real_height).data;
-          // console.log(app.imageData);
-
           viewDesiredHistogram.style.display = "none";
 
           // check mode
@@ -289,6 +295,14 @@
                 app.processImageGradientFilter();
           } else if (app.mode == MODE_DIFFERENCE_FILTER) {
                 app.processImageDifferenceFilter();
+          } else if (app.mode == MODE_PREWITT_FILTER) {
+                app.processImagePrewittFilter();
+          } else if (app.mode == MODE_SOBEL_FILTER) {
+                app.processImageSobelFilter();
+          } else if (app.mode == MODE_ROBERTS_FILTER) {
+                app.processImageRobertsFilter();
+          } else if (app.mode == MODE_FREICHEN_FILTER) {
+                app.processImageFreichenFilter();
           }
           
         }
@@ -908,19 +922,20 @@
 
         var result = Array();
         for (var i = 0; i < 4; i++) {
-          var val = Math.max(
-            Math.abs(channel_array[i][0] - channel_array[i][4]),
-            Math.abs(channel_array[i][1] - channel_array[i][4]),
-            Math.abs(channel_array[i][2] - channel_array[i][4]),
-            Math.abs(channel_array[i][3] - channel_array[i][4]),
-            Math.abs(channel_array[i][5] - channel_array[i][4]),
-            Math.abs(channel_array[i][6] - channel_array[i][4]),
-            Math.abs(channel_array[i][7] - channel_array[i][4]),
-            Math.abs(channel_array[i][8] - channel_array[i][4]));
-
+          
           if (i == 3) {
             result.push(COLOR_WHITE);
           } else {
+            var val = Math.max(
+              Math.abs(channel_array[i][0] - channel_array[i][4]),
+              Math.abs(channel_array[i][1] - channel_array[i][4]),
+              Math.abs(channel_array[i][2] - channel_array[i][4]),
+              Math.abs(channel_array[i][3] - channel_array[i][4]),
+              Math.abs(channel_array[i][5] - channel_array[i][4]),
+              Math.abs(channel_array[i][6] - channel_array[i][4]),
+              Math.abs(channel_array[i][7] - channel_array[i][4]),
+              Math.abs(channel_array[i][8] - channel_array[i][4]));
+            
             result.push(val);
           }
 
@@ -942,6 +957,278 @@
       }
 
       app.showResultImage();
+      return;
+    }
+
+
+    app.dotProduct = function (arr1, arr2) {
+      var ret = 0;
+      // console.log(arr1.length);
+      // console.log(arr2.length);
+      if (arr1.length == arr2.length) {
+        for (var idx in arr1) {
+          ret += arr1[idx] * arr2[idx];
+        }
+      }
+
+      return ret;
+    }
+
+
+    app.processImagePrewittFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getPrewitt = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var filter_vertical = [-1, 0, 1,
+            -1, 0, 1,
+            -1, 0, 1];
+
+        // HORISONTAL
+        var filter_horisontal = [-1, -1, -1, 
+            0, 0, 0,
+            1, 1, 1];
+    
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val_ver = app.dotProduct(filter_vertical, channel_array[i]);
+            var val_hor = app.dotProduct(filter_horisontal, channel_array[i]);
+            var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getPrewitt(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+
+    app.processImageSobelFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getSobel = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var filter_vertical = [-1, 0, 1,
+            -2, 0, 2,
+            -1, 0, 1];
+
+        // HORISONTAL
+        var filter_horisontal = [-1, -2, -1, 
+            0, 0, 0,
+            1, 2, 1];
+    
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val_ver = app.dotProduct(filter_vertical, channel_array[i]);
+            var val_hor = app.dotProduct(filter_horisontal, channel_array[i]);
+            var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getSobel(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+    app.processImageRobertsFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getRoberts = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var filter_vertical = [1, 0, 
+          0, -1];
+        var filter_horisontal = [0, 1, 
+          -1, 0];
+
+        for (var i = -1; i <= 0; i++) {
+          for (var j = -1; j <= 0; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val_ver = app.dotProduct(filter_vertical, channel_array[i]);
+            var val_hor = app.dotProduct(filter_horisontal, channel_array[i]);
+            var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getRoberts(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+    app.processImageFreichenFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getFreichen = function (r, c) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var F1 = [1, Math.sqrt(2), 1,
+          0, 0, 0,
+          -1, -Math.sqrt(2), -1];
+
+        var F2 = [1, 0, -1,
+          Math.sqrt(2), 0, -Math.sqrt(2),
+          1, 0, -1];
+
+        var F3 = [0, -1, Math.sqrt(2),
+          1, 0, -1,
+          -Math.sqrt(2), 1, 0];
+
+        var F4 = [Math.sqrt(2), -1, 0,
+          -1, 0, 1,
+          0, 1, -Math.sqrt(2)];
+
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(c + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val1 = app.dotProduct(F1, channel_array[i]);
+            var val2 = app.dotProduct(F2, channel_array[i]);
+            var val3 = app.dotProduct(F3, channel_array[i]);
+            var val4 = app.dotProduct(F4, channel_array[i]);
+            var val = Math.sqrt((val1 * val1 + val2 * val2 + val3 * val3 + val4 * val4) / 8);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getFreichen(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
       return;
     }
 
