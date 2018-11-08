@@ -1299,15 +1299,17 @@
           channel_array[i] = Array();
         }
 
-        var a = 1;
-        var b = 1;
-        var c = 1;
-        var d = 1;
-        var e = 1;
-        var f = 1;
-        var g = 1;
-        var h = 1;
-        var j = 1;
+        var a = document.getElementById("filter_1").value;
+        var b = document.getElementById("filter_2").value;
+        var c = document.getElementById("filter_3").value;
+        var d = document.getElementById("filter_4").value;
+        var e = document.getElementById("filter_5").value;
+        var f = document.getElementById("filter_6").value;
+        var g = document.getElementById("filter_7").value;
+        var h = document.getElementById("filter_8").value;
+        var j = document.getElementById("filter_9").value;
+
+        console.log(a);
 
         var custom_filter = [a, b, c,
                               d, e, f,
