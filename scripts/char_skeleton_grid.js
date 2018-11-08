@@ -250,9 +250,8 @@ class CharSkeletonGrid {
                     if (x+1 < this.width && y+1 < this.height && this.grid[y+1][x+1] == SK_COLOR_BLACK) black_count++;
     
                     if (black_count == 1) {
-                        this.prop.data_edge.push([x, y]);
+                      this.prop.data_edge.push([x, y]);
                     }
-
 
                     if (x-1 >= 0 && y-1 >=0 && this.grid[y-1][x-1] == SK_COLOR_WHITE && this.grid[y-1][x] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x+1 < this.width && y-1 >= 0 && this.grid[y-1][x] == SK_COLOR_WHITE && this.grid[y-1][x+1] == SK_COLOR_BLACK) white_to_black_count++;
@@ -262,6 +261,11 @@ class CharSkeletonGrid {
                     if (x-1 >= 0 && y+1 < this.height && this.grid[y+1][x] == SK_COLOR_WHITE && this.grid[y+1][x-1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x-1 >= 0 && y+1 < this.height && this.grid[y+1][x-1] == SK_COLOR_WHITE && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x-1 >=0 && y-1 >= 0 && this.grid[y][x-1] == SK_COLOR_WHITE && this.grid[y-1][x-1] == SK_COLOR_BLACK) white_to_black_count++;    
+
+                    if (y-1 < 0 && x+1 <= this.width && this.grid[y][x+1] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (x+1 >= this.width && y+1 <= this.height && this.grid[y+1][x] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (y+1 >= this.height && x-1 >= 0 && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (x-1 < 0 && y-1 >= 0 && this.grid[y-1][x] == SK_COLOR_BLACK) white_to_black_count++;
 
                     if (white_to_black_count > 2) {
                         data_temp_junction.push([x, y]);
