@@ -358,7 +358,7 @@
           } else if (app.mode == MODE_THINNING_OCR) {
                 app.processImageThinningOCR();
           } else if (app.mode == MODE_FILTER) {
-                app.processImageMedianFilter(); // default filter process
+                // app.processImageMedianFilter(); // default filter process
           }
           
         }
