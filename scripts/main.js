@@ -30,6 +30,7 @@
     const MODE_SOBEL_FILTER = 9;
     const MODE_ROBERTS_FILTER = 11;
     const MODE_FREICHEN_FILTER = 12;
+    const MODE_CUSTOM_FILTER = 13;
 
     const COLOR_WHITE = 255;
     const COLOR_BLACK = 0;
@@ -165,6 +166,8 @@
         app.mode = MODE_ROBERTS_FILTER;
       } else if (mode == 'freichen-filter') {
         app.mode = MODE_FREICHEN_FILTER;
+      } else if (mode == 'custom-filter') {
+        app.mode = MODE_CUSTOM_FILTER;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -303,6 +306,8 @@
                 app.processImageRobertsFilter();
           } else if (app.mode == MODE_FREICHEN_FILTER) {
                 app.processImageFreichenFilter();
+          } else if (app.mode == MODE_CUSTOM_FILTER) {
+                app.processImageCustomFilter();
           }
           
         }
@@ -1219,6 +1224,71 @@
       for (var r = 0; r < app.real_height; r++) {
         for (var c = 0; c < app.real_width; c++) {
           grid[r][c] = getFreichen(r, c);
+        }
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          app.setPixelValue(c, r, grid[r][c]);
+        }
+      }
+
+      app.showResultImage();
+
+      return;
+    }
+
+    app.processImageCustomFilter = function () {
+      var grid = Array(app.real_height);
+      for (var i = 0; i < app.real_height; i++) {
+        grid[i] = Array(app.real_width);
+      }
+
+      var getCustom = function (r, col) {
+        var channel_array = Array(4);
+        for (var i = 0; i < 4; i++) {
+          channel_array[i] = Array();
+        }
+
+        var a = 1;
+        var b = 1;
+        var c = 1;
+        var d = 1;
+        var e = 1;
+        var f = 1;
+        var g = 1;
+        var h = 1;
+        var j = 1;
+
+        var custom_filter = [a, b, c,
+                              d, e, f,
+                              g, h, j]
+
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            var pixel = app.getPixelValue(col + i, r + j);
+            for (var k = 0; k < 4; k++) {
+              channel_array[k].push(pixel[k]);
+            }
+          }
+        }
+
+        var result = Array();
+        for (var i = 0; i < 4; i++) {
+          if (i == 3) {
+            result.push(COLOR_WHITE);
+          } else {
+            var val = app.dotProduct(custom_filter, channel_array[i]);
+            result.push(val);
+          }
+        }
+
+        return result;
+      }
+
+      for (var r = 0; r < app.real_height; r++) {
+        for (var c = 0; c < app.real_width; c++) {
+          grid[r][c] = getCustom(r, c);
         }
       }
 
