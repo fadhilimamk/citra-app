@@ -25,10 +25,18 @@ class CharSkeletonGrid {
             n_edge: 0,
             n_junction: 0,
 
+            // region:
+            // 0 1 2
+            // 3 4 5
+            // 6 7 8
+
+            n_edge_region: [0, 0, 0, 0, 0, 0, 0, 0, 0],
             n_edge_top: 0,
             n_edge_bottom: 0,
             n_edge_left: 0,
             n_edge_right: 0,
+            
+            n_junction_region: [0, 0, 0, 0, 0, 0, 0, 0, 0],
             n_junction_top: 0,
             n_junction_bottom: 0,
             n_junction_left: 0,
@@ -262,6 +270,7 @@ class CharSkeletonGrid {
                     if (x-1 >= 0 && y+1 < this.height && this.grid[y+1][x-1] == SK_COLOR_WHITE && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x-1 >=0 && y-1 >= 0 && this.grid[y][x-1] == SK_COLOR_WHITE && this.grid[y-1][x-1] == SK_COLOR_BLACK) white_to_black_count++;    
 
+                    // extreme case: edge of character / edge of image
                     if (y-1 < 0 && x+1 <= this.width && this.grid[y][x+1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x+1 >= this.width && y+1 <= this.height && this.grid[y+1][x] == SK_COLOR_BLACK) white_to_black_count++;
                     if (y+1 >= this.height && x-1 >= 0 && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
@@ -297,20 +306,53 @@ class CharSkeletonGrid {
 
     calculateEdgeJunctionRegion(percentage) {
 
+        // calculate 9 region
+        var v_limit_1 = parseFloat(this.height) / parseFloat(3);
+        var v_limit_2 = parseFloat(this.height*2) / parseFloat(3);
+        var h_limit_1 = parseFloat(this.width) / parseFloat(3);
+        var h_limit_2 = parseFloat(this.width*2) / parseFloat(3);
+
         if (percentage > 30) percentage = 30;
         var height_limit = percentage*this.height/100;
         var width_limit = percentage*this.width/100;
         for(var i = 0; i < this.prop.data_edge.length; i++) {
-            if (this.prop.data_edge[i][1] < height_limit) this.prop.n_edge_top++;
-            if (this.prop.data_edge[i][1] > this.height - height_limit) this.prop.n_edge_bottom++; 
-            if (this.prop.data_edge[i][0] < width_limit) this.prop.n_edge_left++; 
-            if (this.prop.data_edge[i][0] > this.width - width_limit) this.prop.n_edge_right++; 
+            var x = this.prop.data_edge[i][0];
+            var y = this.prop.data_edge[i][1];
+
+            if (y < height_limit) this.prop.n_edge_top++;
+            if (y > this.height - height_limit) this.prop.n_edge_bottom++; 
+            if (x < width_limit) this.prop.n_edge_left++; 
+            if (x > this.width - width_limit) this.prop.n_edge_right++; 
+
+            if (x < h_limit_1 && y < v_limit_1) this.prop.n_edge_region[0]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y < v_limit_1) this.prop.n_edge_region[1]++;
+            if (x > h_limit_2 && y < v_limit_1) this.prop.n_edge_region[2]++;
+            if (x < h_limit_1 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[3]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[4]++;
+            if (x > h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[5]++;
+            if (x < h_limit_1 && y > v_limit_2) this.prop.n_edge_region[6]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y > v_limit_2) this.prop.n_edge_region[7]++;
+            if (x > h_limit_2 && y > v_limit_2) this.prop.n_edge_region[8]++;
+
         }
         for(var i = 0; i < this.prop.data_junction.length; i++) {
-            if (this.prop.data_junction[i][1] < height_limit) this.prop.n_junction_top++;
-            if (this.prop.data_junction[i][1] > this.height - height_limit) this.prop.n_junction_bottom++; 
-            if (this.prop.data_junction[i][0] < width_limit) this.prop.n_junction_left++; 
-            if (this.prop.data_junction[i][0] > this.width - width_limit) this.prop.n_junction_right++; 
+            var x = this.prop.data_edge[i][0];
+            var y = this.prop.data_edge[i][1];
+
+            if (y < height_limit) this.prop.n_junction_top++;
+            if (y > this.height - height_limit) this.prop.n_junction_bottom++; 
+            if (x < width_limit) this.prop.n_junction_left++; 
+            if (x > this.width - width_limit) this.prop.n_junction_right++; 
+
+            if (x < h_limit_1 && y < v_limit_1) this.prop.n_junction_region[0]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y < v_limit_1) this.prop.n_junction_region[1]++;
+            if (x > h_limit_2 && y < v_limit_1) this.prop.n_junction_region[2]++;
+            if (x < h_limit_1 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[3]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[4]++;
+            if (x > h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[5]++;
+            if (x < h_limit_1 && y > v_limit_2) this.prop.n_junction_region[6]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y > v_limit_2) this.prop.n_junction_region[7]++;
+            if (x > h_limit_2 && y > v_limit_2) this.prop.n_junction_region[8]++;
         }
 
         console.log(this.prop);
