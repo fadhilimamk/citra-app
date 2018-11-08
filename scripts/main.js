@@ -774,8 +774,7 @@
       char_skeleton.calculateEdgeJunctionRegion(15);
 
       app.showResultImage();
-      localStorage.setItem(char_idx, JSON.stringify(char_skeleton.prop));
-      char_idx++;
+      console.log(char_skeleton.predict());
       return;
 
     }
