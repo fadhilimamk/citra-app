@@ -175,6 +175,7 @@ class CharSkeletonGrid {
         }
 
         var max_length = percentage * this.diagonal / 100;
+        console.log("maxlen "+max_length.toString())
 
         if (this.prop.data_junction.length > 0) {
             for (var idx in this.prop.data_edge) {

@@ -9,9 +9,12 @@
     script2.src = 'scripts/image_grid.js';
     var script3 = document.createElement('script');
     script3.src = 'scripts/zhang_suen.js';
+    var script4 = document.createElement('script');
+    script4.src = 'scripts/mlp.js';
     document.head.appendChild(script);
     document.head.appendChild(script2);
     document.head.appendChild(script3);
+    document.head.appendChild(script4);
 
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('select');
@@ -786,6 +789,10 @@
 
       char_skeleton.setCodePercentage(ZS.code_percentage);
       char_skeleton.calculateEdgeJunctionRegion(15);
+
+      var classifier = new MLPClassifier();
+      classifier.predict(char_skeleton.prop);
+      console.log(classifier.result);
 
       app.showResultImage();
       localStorage.setItem(char_idx, JSON.stringify(char_skeleton.prop));
