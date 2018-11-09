@@ -851,7 +851,7 @@
       console.log(classifier.result);
 
       app.showResultImage();
-      console.log(char_skeleton.predict());
+      // console.log(char_skeleton.predict());
       return;
 
     }
