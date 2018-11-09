@@ -25,10 +25,18 @@ class CharSkeletonGrid {
             n_edge: 0,
             n_junction: 0,
 
+            // region:
+            // 0 1 2
+            // 3 4 5
+            // 6 7 8
+
+            n_edge_region: [0, 0, 0, 0, 0, 0, 0, 0, 0],
             n_edge_top: 0,
             n_edge_bottom: 0,
             n_edge_left: 0,
             n_edge_right: 0,
+            
+            n_junction_region: [0, 0, 0, 0, 0, 0, 0, 0, 0],
             n_junction_top: 0,
             n_junction_bottom: 0,
             n_junction_left: 0,
@@ -251,9 +259,8 @@ class CharSkeletonGrid {
                     if (x+1 < this.width && y+1 < this.height && this.grid[y+1][x+1] == SK_COLOR_BLACK) black_count++;
     
                     if (black_count == 1) {
-                        this.prop.data_edge.push([x, y]);
+                      this.prop.data_edge.push([x, y]);
                     }
-
 
                     if (x-1 >= 0 && y-1 >=0 && this.grid[y-1][x-1] == SK_COLOR_WHITE && this.grid[y-1][x] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x+1 < this.width && y-1 >= 0 && this.grid[y-1][x] == SK_COLOR_WHITE && this.grid[y-1][x+1] == SK_COLOR_BLACK) white_to_black_count++;
@@ -263,6 +270,12 @@ class CharSkeletonGrid {
                     if (x-1 >= 0 && y+1 < this.height && this.grid[y+1][x] == SK_COLOR_WHITE && this.grid[y+1][x-1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x-1 >= 0 && y+1 < this.height && this.grid[y+1][x-1] == SK_COLOR_WHITE && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
                     if (x-1 >=0 && y-1 >= 0 && this.grid[y][x-1] == SK_COLOR_WHITE && this.grid[y-1][x-1] == SK_COLOR_BLACK) white_to_black_count++;    
+
+                    // extreme case: edge of character / edge of image
+                    if (y-1 < 0 && x+1 <= this.width && this.grid[y][x+1] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (x+1 >= this.width && y+1 <= this.height && this.grid[y+1][x] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (y+1 >= this.height && x-1 >= 0 && this.grid[y][x-1] == SK_COLOR_BLACK) white_to_black_count++;
+                    if (x-1 < 0 && y-1 >= 0 && this.grid[y-1][x] == SK_COLOR_BLACK) white_to_black_count++;
 
                     if (white_to_black_count > 2) {
                         data_temp_junction.push([x, y]);
@@ -294,20 +307,53 @@ class CharSkeletonGrid {
 
     calculateEdgeJunctionRegion(percentage) {
 
+        // calculate 9 region
+        var v_limit_1 = parseFloat(this.height) / parseFloat(3);
+        var v_limit_2 = parseFloat(this.height*2) / parseFloat(3);
+        var h_limit_1 = parseFloat(this.width) / parseFloat(3);
+        var h_limit_2 = parseFloat(this.width*2) / parseFloat(3);
+
         if (percentage > 30) percentage = 30;
         var height_limit = percentage*this.height/100;
         var width_limit = percentage*this.width/100;
         for(var i = 0; i < this.prop.data_edge.length; i++) {
-            if (this.prop.data_edge[i][1] < height_limit) this.prop.n_edge_top++;
-            if (this.prop.data_edge[i][1] > this.height - height_limit) this.prop.n_edge_bottom++; 
-            if (this.prop.data_edge[i][0] < width_limit) this.prop.n_edge_left++; 
-            if (this.prop.data_edge[i][0] > this.width - width_limit) this.prop.n_edge_right++; 
+            var x = this.prop.data_edge[i][0];
+            var y = this.prop.data_edge[i][1];
+
+            if (y < height_limit) this.prop.n_edge_top++;
+            if (y > this.height - height_limit) this.prop.n_edge_bottom++; 
+            if (x < width_limit) this.prop.n_edge_left++; 
+            if (x > this.width - width_limit) this.prop.n_edge_right++; 
+
+            if (x < h_limit_1 && y < v_limit_1) this.prop.n_edge_region[0]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y < v_limit_1) this.prop.n_edge_region[1]++;
+            if (x > h_limit_2 && y < v_limit_1) this.prop.n_edge_region[2]++;
+            if (x < h_limit_1 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[3]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[4]++;
+            if (x > h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_edge_region[5]++;
+            if (x < h_limit_1 && y > v_limit_2) this.prop.n_edge_region[6]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y > v_limit_2) this.prop.n_edge_region[7]++;
+            if (x > h_limit_2 && y > v_limit_2) this.prop.n_edge_region[8]++;
+
         }
         for(var i = 0; i < this.prop.data_junction.length; i++) {
-            if (this.prop.data_junction[i][1] < height_limit) this.prop.n_junction_top++;
-            if (this.prop.data_junction[i][1] > this.height - height_limit) this.prop.n_junction_bottom++; 
-            if (this.prop.data_junction[i][0] < width_limit) this.prop.n_junction_left++; 
-            if (this.prop.data_junction[i][0] > this.width - width_limit) this.prop.n_junction_right++; 
+            var x = this.prop.data_edge[i][0];
+            var y = this.prop.data_edge[i][1];
+
+            if (y < height_limit) this.prop.n_junction_top++;
+            if (y > this.height - height_limit) this.prop.n_junction_bottom++; 
+            if (x < width_limit) this.prop.n_junction_left++; 
+            if (x > this.width - width_limit) this.prop.n_junction_right++; 
+
+            if (x < h_limit_1 && y < v_limit_1) this.prop.n_junction_region[0]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y < v_limit_1) this.prop.n_junction_region[1]++;
+            if (x > h_limit_2 && y < v_limit_1) this.prop.n_junction_region[2]++;
+            if (x < h_limit_1 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[3]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[4]++;
+            if (x > h_limit_2 && y >= v_limit_1 && y <= v_limit_2) this.prop.n_junction_region[5]++;
+            if (x < h_limit_1 && y > v_limit_2) this.prop.n_junction_region[6]++;
+            if (x >= h_limit_1 && x <= h_limit_2 && y > v_limit_2) this.prop.n_junction_region[7]++;
+            if (x > h_limit_2 && y > v_limit_2) this.prop.n_junction_region[8]++;
         }
 
         console.log(this.prop);
@@ -326,6 +372,267 @@ class CharSkeletonGrid {
         this.calculateCircular();
         return this.prop;
     }
+
+
+    predict() {
+        return this.predictChar(this.prop.n_edge, this.prop.n_junction, this.prop.n_edge_top, this.prop.n_edge_bottom, this.prop.n_edge_left, this.prop.n_edge_right, this.prop.n_junction_top, this.prop.n_junction_bottom, this.prop.n_junction_left, this.prop.n_junction_right, this.prop.percent_code_vertical, this.prop.percent_code_horizontal, this.prop.percent_code_diagonal);
+    }
+
+    predictChar(n_edge, n_junction, n_edge_top, n_edge_bottom, n_edge_left, n_edge_right, n_junction_top, n_junction_bottom, n_junction_left, n_junction_right, percent_code_vertical, percent_code_horizontal, percent_code_diagonal) {
+  if (percent_code_horizontal <= 0.0212500002235)
+    if (percent_code_vertical <= 0.413333326578)
+      return '$';
+    else  // if percent_code_vertical > 0.413333326578
+      return '1';
+  else  // if percent_code_horizontal > 0.0212500002235
+    if (n_edge <= 0.5)
+      if (n_junction_left <= 0.5)
+        if (n_junction <= 1.0)
+          if (percent_code_vertical <= 0.0391666665673)
+            return 'H';
+          else  // if percent_code_vertical > 0.0391666665673
+            if (percent_code_diagonal <= 0.0572034604847)
+              return '+';
+            else  // if percent_code_diagonal > 0.0572034604847
+              if (percent_code_vertical <= 0.223333328962)
+                return '=';
+              else  // if percent_code_vertical > 0.223333328962
+                if (percent_code_diagonal <= 0.108166538179)
+                  return 'S';
+                else  // if percent_code_diagonal > 0.108166538179
+                  return '&';
+        else  // if n_junction > 1.0
+          return 'x';
+      else  // if n_junction_left > 0.5
+        return 'K';
+    else  // if n_edge > 0.5
+      if (n_edge <= 1.5)
+        if (n_edge_bottom <= 0.5)
+          if (n_junction_left <= 0.5)
+            if (n_edge_top <= 0.5)
+              return 'z';
+            else  // if n_edge_top > 0.5
+              return 'n';
+          else  // if n_junction_left > 0.5
+            if (n_edge_left <= 0.5)
+              return 'p';
+            else  // if n_edge_left > 0.5
+              return 'f';
+        else  // if n_edge_bottom > 0.5
+          if (n_junction_right <= 0.5)
+            if (n_edge_left <= 0.5)
+              if (percent_code_horizontal <= 0.386249989271)
+                return '/';
+              else  // if percent_code_horizontal > 0.386249989271
+                if (percent_code_vertical <= 0.38250002265)
+                  return 'r';
+                else  // if percent_code_vertical > 0.38250002265
+                  return 'C';
+            else  // if n_edge_left > 0.5
+              if (n_junction <= 0.5)
+                return 'D';
+              else  // if n_junction > 0.5
+                if (percent_code_horizontal <= 0.293749988079)
+                  return 'P';
+                else  // if percent_code_horizontal > 0.293749988079
+                  if (n_junction_left <= 0.5)
+                    return '|';
+                  else  // if n_junction_left > 0.5
+                    return '.';
+          else  // if n_junction_right > 0.5
+            if (percent_code_diagonal <= 0.0908321589231)
+              return 'h';
+            else  // if percent_code_diagonal > 0.0908321589231
+              if (percent_code_horizontal <= 0.247500002384)
+                return '4';
+              else  // if percent_code_horizontal > 0.247500002384
+                if (percent_code_horizontal <= 0.263750016689)
+                  return 'b';
+                else  // if percent_code_horizontal > 0.263750016689
+                  return 'E';
+      else  // if n_edge > 1.5
+        if (n_junction <= 0.5)
+          if (n_edge_left <= 0.5)
+            if (n_edge_top <= 0.5)
+              if (n_edge_right <= 1.0)
+                return '!';
+              else  // if n_edge_right > 1.0
+                if (percent_code_diagonal <= 0.168490186334)
+                  return 'j';
+                else  // if percent_code_diagonal > 0.168490186334
+                  return 'O';
+            else  // if n_edge_top > 0.5
+              if (percent_code_horizontal <= 0.465000003576)
+                return '8';
+              else  // if percent_code_horizontal > 0.465000003576
+                if (percent_code_vertical <= 0.275833308697)
+                  return '3';
+                else  // if percent_code_vertical > 0.275833308697
+                  return 'c';
+          else  // if n_edge_left > 0.5
+            if (n_edge_right <= 0.5)
+              if (percent_code_vertical <= 0.0900000035763)
+                return ';';
+              else  // if percent_code_vertical > 0.0900000035763
+                if (percent_code_vertical <= 0.191666662693)
+                  return '<';
+                else  // if percent_code_vertical > 0.191666662693
+                  if (n_edge_bottom <= 0.5)
+                    if (percent_code_vertical <= 0.239166676998)
+                      return '?';
+                    else  // if percent_code_vertical > 0.239166676998
+                      if (percent_code_diagonal <= 0.169183552265)
+                        return 'o';
+                      else  // if percent_code_diagonal > 0.169183552265
+                        return 'd';
+                  else  // if n_edge_bottom > 0.5
+                    if (percent_code_vertical <= 0.470833361149)
+                      return 't';
+                    else  // if percent_code_vertical > 0.470833361149
+                      return 'u';
+            else  // if n_edge_right > 0.5
+              if (percent_code_diagonal <= 0.0194145068526)
+                return 'Z';
+              else  // if percent_code_diagonal > 0.0194145068526
+                if (n_edge <= 2.5)
+                  if (n_edge_bottom <= 0.5)
+                    if (percent_code_diagonal <= 0.0648305863142)
+                      return '%';
+                    else  // if percent_code_diagonal > 0.0648305863142
+                      if (n_edge_top <= 1.0)
+                        if (percent_code_horizontal <= 0.503750026226)
+                          return '}';
+                        else  // if percent_code_horizontal > 0.503750026226
+                          if (percent_code_diagonal <= 0.21529302001)
+                            return 'M';
+                          else  // if percent_code_diagonal > 0.21529302001
+                            return ':';
+                      else  // if n_edge_top > 1.0
+                        if (percent_code_horizontal <= 0.0337499976158)
+                          return 'F';
+                        else  // if percent_code_horizontal > 0.0337499976158
+                          if (percent_code_vertical <= 0.553333342075)
+                            return 'Y';
+                          else  // if percent_code_vertical > 0.553333342075
+                            if (percent_code_vertical <= 0.821666657925)
+                              return 'B';
+                            else  // if percent_code_vertical > 0.821666657925
+                              if (percent_code_diagonal <= 0.146995544434)
+                                return 'a';
+                              else  // if percent_code_diagonal > 0.146995544434
+                                return 'J';
+                  else  // if n_edge_bottom > 0.5
+                    if (n_edge_bottom <= 1.5)
+                      if (percent_code_diagonal <= 0.0457627661526)
+                        return 'w';
+                      else  // if percent_code_diagonal > 0.0457627661526
+                        if (n_edge_top <= 0.5)
+                          return 'X';
+                        else  // if n_edge_top > 0.5
+                          if (percent_code_diagonal <= 0.0929122790694)
+                            return '0';
+                          else  // if percent_code_diagonal > 0.0929122790694
+                            if (percent_code_diagonal <= 0.140061795712)
+                              return 'l';
+                            else  // if percent_code_diagonal > 0.140061795712
+                              if (percent_code_vertical <= 0.142499998212)
+                                return 'm';
+                              else  // if percent_code_vertical > 0.142499998212
+                                if (percent_code_vertical <= 0.204999998212)
+                                  return 'L';
+                                else  // if percent_code_vertical > 0.204999998212
+                                  if (percent_code_vertical <= 0.688333332539)
+                                    return 'V';
+                                  else  // if percent_code_vertical > 0.688333332539
+                                    return '"';
+                    else  // if n_edge_bottom > 1.5
+                      return '{';
+                else  // if n_edge > 2.5
+                  if (n_edge_right <= 1.5)
+                    if (percent_code_diagonal <= 0.0478428937495)
+                      return '_';
+                    else  // if percent_code_diagonal > 0.0478428937495
+                      return 'Q';
+                  else  // if n_edge_right > 1.5
+                    return '7';
+        else  // if n_junction > 0.5
+          if (n_junction <= 1.5)
+            if (n_junction_top <= 0.5)
+              if (n_junction_left <= 0.5)
+                if (n_edge_top <= 0.5)
+                  if (percent_code_vertical <= 0.61333334446)
+                    return 'T';
+                  else  // if percent_code_vertical > 0.61333334446
+                    return '5';
+                else  // if n_edge_top > 0.5
+                  if (n_edge_left <= 1.5)
+                    if (percent_code_vertical <= 0.309166669846)
+                      return 'q';
+                    else  // if percent_code_vertical > 0.309166669846
+                      if (percent_code_diagonal <= 0.127927735448)
+                        return 'U';
+                      else  // if percent_code_diagonal > 0.127927735448
+                        return 'R';
+                  else  // if n_edge_left > 1.5
+                    if (percent_code_diagonal <= 0.184784501791)
+                      return 'y';
+                    else  // if percent_code_diagonal > 0.184784501791
+                      return 'i';
+              else  // if n_junction_left > 0.5
+                if (n_edge_bottom <= 1.5)
+                  if (percent_code_diagonal <= 0.0897920951247)
+                    return 'W';
+                  else  // if percent_code_diagonal > 0.0897920951247
+                    return 'I';
+                else  // if n_edge_bottom > 1.5
+                  if (percent_code_diagonal <= 0.121340669692)
+                    return '9';
+                  else  // if percent_code_diagonal > 0.121340669692
+                    return '~';
+            else  // if n_junction_top > 0.5
+              return '>';
+          else  // if n_junction > 1.5
+            if (n_junction_top <= 0.5)
+              if (percent_code_vertical <= 0.206666663289)
+                return 'e';
+              else  // if percent_code_vertical > 0.206666663289
+                if (n_edge_right <= 0.5)
+                  return 'A';
+                else  // if n_edge_right > 0.5
+                  if (percent_code_horizontal <= 0.104999996722)
+                    return 'N';
+                  else  // if percent_code_horizontal > 0.104999996722
+                    if (n_junction_left <= 0.5)
+                      if (n_edge_bottom <= 1.5)
+                        if (percent_code_vertical <= 0.3125)
+                          return '@';
+                        else  // if percent_code_vertical > 0.3125
+                          if (percent_code_vertical <= 0.365833342075)
+                            return '2';
+                          else  // if percent_code_vertical > 0.365833342075
+                            return 'v';
+                      else  // if n_edge_bottom > 1.5
+                        return 'G';
+                    else  // if n_junction_left > 0.5
+                      if (percent_code_horizontal <= 0.363749980927)
+                        return 's';
+                      else  // if percent_code_horizontal > 0.363749980927
+                        if (n_edge_top <= 0.5)
+                          return '6';
+                        else  // if n_edge_top > 0.5
+                          if (percent_code_diagonal <= 0.112326793373)
+                            return 'g';
+                          else  // if percent_code_diagonal > 0.112326793373
+                            return ')';
+            else  // if n_junction_top > 0.5
+              if (n_edge_bottom <= 1.0)
+                return ',';
+              else  // if n_edge_bottom > 1.0
+                if (n_junction <= 2.5)
+                  return 'k';
+                else  // if n_junction > 2.5
+                  return '(';
+}
 
 
     // HELPER METHOD ================================================
