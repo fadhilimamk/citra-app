@@ -25,7 +25,7 @@ class ImageGrid {
 
     getImagePixel(x, y) {
         var offset = (y * this.width + x)*4;
-        var color = [0,0,0,0];
+        var color = [0,0,0,0]; // color is array [r,g,b,a]
         for (var i = 0; i < color.length; i++) {
             color[i] = this.data[offset + i];
         }
@@ -136,6 +136,54 @@ class ImageGrid {
         }
       
         return [ h, s, v ];
+    }
+
+    isPixelSkin(color_rgba, color_hsv, color_ycbcr) {
+        var isSkin = false;
+
+        var R = color_rgba[0];
+        var G = color_rgba[1];
+        var B = color_rgba[2];
+        var A = color_rgba[3];
+        var H = color_hsv[0];
+        var S = color_hsv[1];
+        var V = color_hsv[2];
+        var Y = color_ycbcr[0];
+        var Cb = color_ycbcr[1];
+        var Cr = color_ycbcr[2]
+
+        if (R > 95 && 
+            G > 40 && 
+            B > 20 &&
+            R > G &&
+            R > B &&
+            Math.abs(R-G) > 15 && 
+            A > 15 &&
+            Cr > 135 &&
+            Cb > 85 &&
+            Y > 80 &&
+            Cr <= (1.5862*Cb)+20 &&
+            Cr >= (0.3448*Cb)+76.2069 &&
+            Cr >= (-4.5652*Cb)+234.5652 &&
+            Cr <= (-1.15*Cb)+301.75 &&
+            Cr <= (-2.2857*Cb)+432.85) {
+                isSkin = true;
+            }
+
+        return isSkin;
+    }
+
+    detectHumanSkin() {
+        for (var y = 0; y < this.height; y++) {
+            for (var x = 0; x < this.width; x++) {
+                var color_rgba = this.getImagePixel(x, y);
+                var color_hsv = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2]);
+                var color_ycbcr = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2])
+                if (!isSkin(color_rgba, color_hsv, color_ycbcr)) {
+                    this.setImagePixel(x, y, IG_COLOR_BLACK);
+                }
+            }
+        }
     }
 
     static convertDataToGrid(data, height, width) {
