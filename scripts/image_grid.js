@@ -138,6 +138,12 @@ class ImageGrid {
         return [ h, s, v ];
     }
 
+    rgbToYcbcr(r, g, b) {
+        return [16 + (65.481*r + 128.553*g + 24.966*b),
+            128 + (-37.797*r - 74.203*g + 112*b),
+            128 + (112*r - 93.786*g - 18.214*b)];
+    }
+
     static convertDataToGrid(data, height, width) {
         var grid = [];
         for (var y = 0; y < height; y++) {
@@ -165,12 +171,6 @@ class ImageGrid {
             }
         }
         return img_data;
-    }
-
-    static rgbToYcbcr(rgb) {
-        return [16 + (65.481*rgb[0] + 128.553*rgb[1] + 24.966*rgb[2]),
-            128 + (-37.797*rgb[0] - 74.203*rgb[1] + 112*rgb[2]),
-            128 + (112*rgb[0] - 93.786*rgb[1] - 18.214*rgb[2])];
     }
 
 }
