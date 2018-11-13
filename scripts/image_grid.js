@@ -138,6 +138,12 @@ class ImageGrid {
         return [ h, s, v ];
     }
 
+    rgbToYcbcr(r, g, b) {
+        return [16 + (65.481*r + 128.553*g + 24.966*b),
+            128 + (-37.797*r - 74.203*g + 112*b),
+            128 + (112*r - 93.786*g - 18.214*b)];
+    }
+
     isPixelSkin(color_rgba, color_hsv, color_ycbcr) {
         var isSkin = false;
 
@@ -150,7 +156,11 @@ class ImageGrid {
         var V = color_hsv[2];
         var Y = color_ycbcr[0];
         var Cb = color_ycbcr[1];
-        var Cr = color_ycbcr[2]
+        var Cr = color_ycbcr[2];
+
+        if ( H > 0.0 && H <=50.0 && S > 0.23 && S <= 0.68 && R > 95 && G > 40 && B > 20 && R > G && R > B && Math.abs(R - G) > 15 && A > 15) {
+            isSkin = true;
+        }
 
         if (R > 95 && 
             G > 40 && 
@@ -178,8 +188,8 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 var color_rgba = this.getImagePixel(x, y);
                 var color_hsv = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2]);
-                var color_ycbcr = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2])
-                if (!isSkin(color_rgba, color_hsv, color_ycbcr)) {
+                var color_ycbcr = this.rgbToYcbcr(color_rgba[0], color_rgba[1], color_rgba[2])
+                if (!this.isPixelSkin(color_rgba, color_hsv, color_ycbcr)) {
                     this.setImagePixel(x, y, IG_COLOR_BLACK);
                 }
             }

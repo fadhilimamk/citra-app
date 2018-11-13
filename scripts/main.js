@@ -26,15 +26,8 @@
     const MODE_OCR = 2;
     const MODE_THINNING = 3;
     const MODE_THINNING_OCR = 4;
-    const MODE_FILTER = 99;
-    const MODE_MEDIAN_FILTER = 5;
-    const MODE_GRADIENT_FILTER = 6;
-    const MODE_DIFFERENCE_FILTER = 7;
-    const MODE_PREWITT_FILTER = 8;
-    const MODE_SOBEL_FILTER = 9;
-    const MODE_ROBERTS_FILTER = 11;
-    const MODE_FREICHEN_FILTER = 12;
-    const MODE_CUSTOM_FILTER = 13;
+    const MODE_FILTER = 5;
+    const MODE_FACE = 6;
 
     const MODE_FILTER_MEDIAN = 5;
     const MODE_FILTER_GRADIENT = 6;
@@ -174,6 +167,8 @@
         app.mode = MODE_THINNING_OCR;
       } else if (mode === 'filter') {
         app.mode = MODE_FILTER;
+      } else if (mode === 'face-detection') {
+        app.mode = MODE_FACE;
       } else { // default
         app.mode = MODE_HIST_EQUAL;
       }
@@ -362,6 +357,8 @@
                 app.processImageThinningOCR();
           } else if (app.mode == MODE_FILTER) {
                 app.processImageMedianFilter(); // default filter process
+          } else if (app.mode == MODE_FACE) {
+                app.processFaceDetection();
           }
           
         }
@@ -851,7 +848,7 @@
       console.log(classifier.result);
 
       app.showResultImage();
-      console.log(char_skeleton.predict());
+      // console.log(char_skeleton.predict());
       return;
 
     }
@@ -1356,6 +1353,12 @@
       app.showResultImage();
 
       return;
+    }
+
+    app.processFaceDetection = function() {
+      app.imageGrid.detectHumanSkin();
+      app.imageData = app.imageGrid.data;
+      app.showResultImage();
     }
 
     app.classify_digit = function (intersection_list, endpoint_list) {
