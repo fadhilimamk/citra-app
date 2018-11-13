@@ -143,4 +143,10 @@ class ImageGrid {
         return img_data;
     }
 
+    static rgbToYcbcr(rgb) {
+        return [16 + (65.481*rgb[0] + 128.553*rgb[1] + 24.966*rgb[2]),
+            128 + (-37.797*rgb[0] - 74.203*rgb[1] + 112*rgb[2]),
+            128 + (112*rgb[0] - 93.786*rgb[1] - 18.214*rgb[2])];
+    }
+
 }
