@@ -144,8 +144,12 @@ class ImageGrid {
             128 + (112*r - 93.786*g - 18.214*b)];
     }
 
-    isPixelSkin(color_rgba, color_hsv, color_ycbcr) {
+    isPixelSkin(x, y) {
         var isSkin = false;
+
+        var color_rgba = this.getImagePixel(x, y);
+        var color_hsv = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2]);
+        var color_ycbcr = this.rgbToYcbcr(color_rgba[0], color_rgba[1], color_rgba[2])
 
         var R = color_rgba[0];
         var G = color_rgba[1];
@@ -184,245 +188,8 @@ class ImageGrid {
     }
 
     detectHumanSkin() {
-
-        /**
- * DBSCAN - Density based clustering
- *
- * @author Lukasz Krawczyk <contact@lukaszkrawczyk.eu>
- * @copyright MIT
- */
-
-/**
- * DBSCAN class construcotr
- * @constructor
- *
- * @param {Array} dataset
- * @param {number} epsilon
- * @param {number} minPts
- * @param {function} distanceFunction
- * @returns {DBSCAN}
- */
-function DBSCAN(dataset, epsilon, minPts, distanceFunction) {
-    /** @type {Array} */
-    this.dataset = [];
-    /** @type {number} */
-    this.epsilon = 1;
-    /** @type {number} */
-    this.minPts = 2;
-    /** @type {function} */
-    this.distance = this._euclideanDistance;
-    /** @type {Array} */
-    this.clusters = [];
-    /** @type {Array} */
-    this.noise = [];
-  
-    // temporary variables used during computation
-  
-    /** @type {Array} */
-    this._visited = [];
-    /** @type {Array} */
-    this._assigned = [];
-    /** @type {number} */
-    this._datasetLength = 0;
-  
-    this._init(dataset, epsilon, minPts, distanceFunction);
-  };
-  
-  /******************************************************************************/
-  // public functions
-  
-  /**
-   * Start clustering
-   *
-   * @param {Array} dataset
-   * @param {number} epsilon
-   * @param {number} minPts
-   * @param {function} distanceFunction
-   * @returns {undefined}
-   * @access public
-   */
-  DBSCAN.prototype.run = function(dataset, epsilon, minPts, distanceFunction) {
-    this._init(dataset, epsilon, minPts, distanceFunction);
-  
-    for (var pointId = 0; pointId < this._datasetLength; pointId++) {
-      // if point is not visited, check if it forms a cluster
-      if (this._visited[pointId] !== 1) {
-        this._visited[pointId] = 1;
-  
-        // if closest neighborhood is too small to form a cluster, mark as noise
-        var neighbors = this._regionQuery(pointId);
-  
-        if (neighbors.length < this.minPts) {
-          this.noise.push(pointId);
-        } else {
-          // create new cluster and add point
-          var clusterId = this.clusters.length;
-          this.clusters.push([]);
-          this._addToCluster(pointId, clusterId);
-  
-          this._expandCluster(clusterId, neighbors);
-        }
-      }
-    }
-  
-    return this.clusters;
-  };
-  
-  /******************************************************************************/
-  // protected functions
-  
-  /**
-   * Set object properties
-   *
-   * @param {Array} dataset
-   * @param {number} epsilon
-   * @param {number} minPts
-   * @param {function} distance
-   * @returns {undefined}
-   * @access protected
-   */
-  DBSCAN.prototype._init = function(dataset, epsilon, minPts, distance) {
-  
-    if (dataset) {
-  
-      if (!(dataset instanceof Array)) {
-        throw Error('Dataset must be of type array, ' +
-          typeof dataset + ' given');
-      }
-  
-      this.dataset = dataset;
-      this.clusters = [];
-      this.noise = [];
-  
-      this._datasetLength = dataset.length;
-      this._visited = new Array(this._datasetLength);
-      this._assigned = new Array(this._datasetLength);
-    }
-  
-    if (epsilon) {
-      this.epsilon = epsilon;
-    }
-  
-    if (minPts) {
-      this.minPts = minPts;
-    }
-  
-    if (distance) {
-      this.distance = distance;
-    }
-  };
-  
-  /**
-   * Expand cluster to closest points of given neighborhood
-   *
-   * @param {number} clusterId
-   * @param {Array} neighbors
-   * @returns {undefined}
-   * @access protected
-   */
-  DBSCAN.prototype._expandCluster = function(clusterId, neighbors) {
-  
-    /**
-     * It's very important to calculate length of neighbors array each time,
-     * as the number of elements changes over time
-     */
-    for (var i = 0; i < neighbors.length; i++) {
-      var pointId2 = neighbors[i];
-  
-      if (this._visited[pointId2] !== 1) {
-        this._visited[pointId2] = 1;
-        var neighbors2 = this._regionQuery(pointId2);
-  
-        if (neighbors2.length >= this.minPts) {
-          neighbors = this._mergeArrays(neighbors, neighbors2);
-        }
-      }
-  
-      // add to cluster
-      if (this._assigned[pointId2] !== 1) {
-        this._addToCluster(pointId2, clusterId);
-      }
-    }
-  };
-  
-  /**
-   * Add new point to cluster
-   *
-   * @param {number} pointId
-   * @param {number} clusterId
-   */
-  DBSCAN.prototype._addToCluster = function(pointId, clusterId) {
-    this.clusters[clusterId].push(pointId);
-    this._assigned[pointId] = 1;
-  };
-  
-  /**
-   * Find all neighbors around given point
-   *
-   * @param {number} pointId,
-   * @param {number} epsilon
-   * @returns {Array}
-   * @access protected
-   */
-  DBSCAN.prototype._regionQuery = function(pointId) {
-    var neighbors = [];
-  
-    for (var id = 0; id < this._datasetLength; id++) {
-      var dist = this.distance(this.dataset[pointId], this.dataset[id]);
-      if (dist < this.epsilon) {
-        neighbors.push(id);
-      }
-    }
-  
-    return neighbors;
-  };
-  
-  /******************************************************************************/
-  // helpers
-  
-  /**
-   * @param {Array} a
-   * @param {Array} b
-   * @returns {Array}
-   * @access protected
-   */
-  DBSCAN.prototype._mergeArrays = function(a, b) {
-    var len = b.length;
-  
-    for (var i = 0; i < len; i++) {
-      var P = b[i];
-      if (a.indexOf(P) < 0) {
-        a.push(P);
-      }
-    }
-  
-    return a;
-  };
-  
-  /**
-   * Calculate euclidean distance in multidimensional space
-   *
-   * @param {Array} p
-   * @param {Array} q
-   * @returns {number}
-   * @access protected
-   */
-  DBSCAN.prototype._euclideanDistance = function(p, q) {
-    var sum = 0;
-    var i = Math.min(p.length, q.length);
-  
-    while (i--) {
-      sum += (p[i] - q[i]) * (p[i] - q[i]);
-    }
-  
-    return Math.sqrt(sum);
-  };
-  
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DBSCAN;
-  }
-
-        var point_data = [];
+        var point_data = [];    // store all human skin pixel location
+        var visited = [];
 
         var x_min = 999999;
         var y_min = 999999;
@@ -430,13 +197,13 @@ function DBSCAN(dataset, epsilon, minPts, distanceFunction) {
         var y_max = 0;
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
-                var color_rgba = this.getImagePixel(x, y);
-                var color_hsv = this.rgbToHSV(color_rgba[0], color_rgba[1], color_rgba[2]);
-                var color_ycbcr = this.rgbToYcbcr(color_rgba[0], color_rgba[1], color_rgba[2])
-                if (!this.isPixelSkin(color_rgba, color_hsv, color_ycbcr)) {
+                if (!this.isPixelSkin(x, y)) {
                     this.setImagePixel(x, y, IG_COLOR_BLACK);
                 } else {
-                    point_data.push([x,y]);
+                    point_data.push({x: x,y: y, visited: false});
+                    if (visited[x] == undefined) visited[x] = [];
+                    visited[x][y] = false;
+
                     if (x < x_min) x_min = x;
                     if (y < y_min) y_min = y;
                     if (x > x_max) x_max = x;
@@ -445,20 +212,90 @@ function DBSCAN(dataset, epsilon, minPts, distanceFunction) {
             }
         }
 
-        console.log(point_data);
+        // start flooding to get face candidate
+        var MIN_PIXEL_PER_CLUSTER = 25;
+        var clusters = [];
+        for (var i = 0; i < point_data.length; i++) {
+            var crt_cluster = [];
+            var x_min_cluster = 999999;
+            var y_min_cluster = 999999;
+            var x_max_cluster = 0;
+            var y_max_cluster = 0;
 
-        // var dbscanner = jDBSCAN().eps(300).minPts(1).distance('EUCLIDEAN').data(point_data);
-        // var point_assignment_result = dbscanner();
-        // console.log(point_assignment_result);
+            var flood_queue = [];
+            flood_queue.push({x: point_data[i].x, y: point_data[i].y});
+            while (flood_queue.length > 0) {
+                var crt_pixel = flood_queue.pop();
+                var x = crt_pixel.x;
+                var y = crt_pixel.y;
+    
+                if (visited[x][y] == true) {
+                    break;
+                } else {
+                    visited[x][y] = true;
+                    crt_cluster.push({x: x, y: y});
+                    if (x < x_min_cluster) x_min_cluster = x;
+                    if (y < y_min_cluster) y_min_cluster = y;
+                    if (x > x_max_cluster) x_max_cluster = x;
+                    if (y > y_max_cluster) y_max_cluster = y;
+                }
+    
+                if (y-1 >= 0) { 
+                    if(this.isPixelSkin(x,y-1)) flood_queue.push({x: x, y: y-1});
+                    if (!this.isPixelSkin(x, y-1)) this.setImagePixel(x, y-1, IG_COLOR_GREEN);
+                }
+                if (y-1 >= 0 && x+1 < this.width) { 
+                    if(this.isPixelSkin(x+1, y-1)) flood_queue.push({x: x+1, y: y-1}); 
+                    if (!this.isPixelSkin(x+1, y-1)) this.setImagePixel(x+1, y-1, IG_COLOR_GREEN);
+                }
+                if (x+1 < this.width) { 
+                    if(this.isPixelSkin(x+1,y)) flood_queue.push({x: x+1, y: y});
+                    if (!this.isPixelSkin(x+1, y)) this.setImagePixel(x+1, y, IG_COLOR_GREEN);
+                }
+                if (x+1 < this.width && y+1 < this.height) {
+                    if(this.isPixelSkin(x+1,y+1)) flood_queue.push({x: x+1, y: y+1});
+                    if (!this.isPixelSkin(x+1, y+1)) this.setImagePixel(x+1, y+1, IG_COLOR_GREEN);
+                }
+                if (y+1 < this.height) {
+                    if(this.isPixelSkin(x,y+1)) flood_queue.push({x: x, y: y+1});
+                    if (!this.isPixelSkin(x, y+1)) this.setImagePixel(x, y+1, IG_COLOR_GREEN);
+                }
+                if (y+1 < this.height && x-1 >= 0){
+                    if(this.isPixelSkin(x-1,y+1)) flood_queue.push({x: x-1, y: y+1});
+                    if (!this.isPixelSkin(x-1, y+1)) this.setImagePixel(x-1, y+1, IG_COLOR_GREEN);
+                }
+                if (x-1 >= 0) {
+                    if (this.isPixelSkin(x-1,y)) flood_queue.push({x: x-1, y: y});
+                    if (!this.isPixelSkin(x-1, y)) this.setImagePixel(x-1, y, IG_COLOR_GREEN);
+                }
+            
+            }
 
-        var dbscan = new DBSCAN();
-        var clusters = dbscan.run(point_data, 10, 10);
+            if (crt_cluster.length > MIN_PIXEL_PER_CLUSTER) {
+                clusters.push({
+                    member: crt_cluster,
+                    top_left: {
+                        x: x_min_cluster,
+                        y: y_min_cluster
+                    },
+                    bottom_right: {
+                        x: x_max_cluster,
+                        y: y_max_cluster
+                    },
+                });
+            }
+        }
+
         console.log(clusters);
 
-        for (var x = 0; x < clusters.length; x++) {
-            // x_min = point_data[i][0];
-            // y_min = point_data[i][1];
-            // x_max = point_data[clusters[i].length-1][0];
+        // draw square per cluster
+        // return;
+        for (var j = 0; j < clusters.length; j++) {
+            var y_min = clusters[j].top_left.y;
+            var x_min = clusters[j].top_left.x;
+            var y_max = clusters[j].bottom_right.y;
+            var x_max = clusters[j].bottom_right.x;
+
             for (var i = x_min; i <= x_max; i++) {
                 this.setImagePixel(i, y_min, IG_COLOR_RED);
                 this.setImagePixel(i, y_max, IG_COLOR_RED);
@@ -467,19 +304,6 @@ function DBSCAN(dataset, epsilon, minPts, distanceFunction) {
                 this.setImagePixel(x_min, i, IG_COLOR_RED);
                 this.setImagePixel(x_max, i, IG_COLOR_RED);
             }
-        }
-
-
-        console.log(y_min, y_max, x_min, x_max);
-
-        // draw square
-        for (var i = x_min; i <= x_max; i++) {
-            this.setImagePixel(i, y_min, IG_COLOR_RED);
-            this.setImagePixel(i, y_max, IG_COLOR_RED);
-        }
-        for (var i = y_min; i <= y_max; i++) {
-            this.setImagePixel(x_min, i, IG_COLOR_RED);
-            this.setImagePixel(x_max, i, IG_COLOR_RED);
         }
     }
 
