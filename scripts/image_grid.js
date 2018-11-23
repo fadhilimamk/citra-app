@@ -474,7 +474,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
