@@ -474,7 +474,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    this.setImagePixel(x, y, IG_COLOR_BLACK); // this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
@@ -584,6 +584,200 @@ class ImageGrid {
             }
         }
 
+        // detect hole per cluster
+        for (var j = 0; j < clusters.length; j++) {
+            var y_min = clusters[j].top_left.y;
+            var x_min = clusters[j].top_left.x;
+            var y_max = clusters[j].bottom_right.y;
+            var x_max = clusters[j].bottom_right.x;
+            var local_height = y_max - y_min + 1;
+            var local_width = x_max - x_min + 1;
+
+            var local_visited = Array(local_height);
+            for (var i = 0; i < local_height; i++) {
+                local_visited[i] = Array.apply(null, Array(local_width)).map(Number.prototype.valueOf,0);
+            }
+            
+            // tag non hole
+            for (var i = 0; i < local_width; i++) {
+                for (var k in [0, local_height-1]) {
+                    var flood_queue = [];
+                    var point = [i, parseInt(k)];
+                    flood_queue.push(point);
+                    while (flood_queue.length > 0) {
+                        var hole_pixel = flood_queue.pop();
+                        var x = hole_pixel[0];
+                        var y = hole_pixel[1];
+
+                        if (local_visited[y][x] != 0) {
+                            continue;
+                        } else {
+                            local_visited[y][x] = 1;
+                        }
+
+                        if (y - 1 >= 0) {
+                            if (!this.isPixelSkin(x + x_min, y - 1 + y_min) && local_visited[y-1][x] == 0) {
+                                var point = [x, y - 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (y + 1 < local_height) {
+                            if (!this.isPixelSkin(x + x_min, y + 1 + y_min) && local_visited[y+1][x] == 0) {
+                                var point = [x, y + 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x - 1 >= 0) {
+                            if (!this.isPixelSkin(x - 1 + x_min, y + y_min) && local_visited[y][x-1] == 0) {
+                                var point = [x - 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x + 1 < local_width) {
+                            if (!this.isPixelSkin(x + 1 + x_min, y + y_min) && local_visited[y][x+1] == 0) {
+                                var point = [x + 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                    }
+                }
+            }
+            for (var i in [0, local_width-1]) {
+                for (var k = 0; k < local_height; k++) {
+                    var flood_queue = [];
+                    var point = [parseInt(i), k];
+                    flood_queue.push(point);
+                    while (flood_queue.length > 0) {
+                        var hole_pixel = flood_queue.pop();
+                        var x = hole_pixel[0];
+                        var y = hole_pixel[1];
+
+                        if (local_visited[y][x] != 0) {
+                            continue;
+                        } else {
+                            local_visited[y][x] = 1;
+                        }
+
+                        if (y - 1 >= 0) {
+                            if (!this.isPixelSkin(x + x_min, y - 1 + y_min) && local_visited[y-1][x] == 0) {
+                                var point = [x, y - 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (y + 1 < local_height) {
+                            if (!this.isPixelSkin(x + x_min, y + 1 + y_min) && local_visited[y+1][x] == 0) {
+                                var point = [x, y + 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x - 1 >= 0) {
+                            if (!this.isPixelSkin(x - 1 + x_min, y + y_min) && local_visited[y][x-1] == 0) {
+                                var point = [x - 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x + 1 < local_width) {
+                            if (!this.isPixelSkin(x + 1 + x_min, y + y_min) && local_visited[y][x+1] == 0) {
+                                var point = [x + 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // tag holes
+            var area_threshold_percentage = 0.001;
+            var area_threshold = area_threshold_percentage * local_width * local_height;
+            var holes = []
+            for (var i = 0; i < local_width; i++) {
+                for (var k = 0; k < local_height; k++) {
+                    var flood_queue = [];
+                    var point = [i, k];
+                    flood_queue.push(point);
+                    var hole = [];
+                    var x_min_local = 9999999;
+                    var x_max_local = -1;
+                    var y_min_local = 9999999;
+                    var y_max_local = -1;
+                    while (flood_queue.length > 0) {
+                        var hole_pixel = flood_queue.pop();
+                        var x = hole_pixel[0];
+                        var y = hole_pixel[1];
+
+                        if (local_visited[y][x] != 0) {
+                            continue;
+                        } else if (this.isPixelSkin(x + x_min, y + y_min)) {
+                            local_visited[y][x] = 1;
+                            continue;
+                        } else {
+                            local_visited[y][x] = 2;
+                            if (x < x_min_local) x_min_local = x;
+                            if (y < y_min_local) y_min_local = y;
+                            if (x > x_max_local) x_max_local = x;
+                            if (y > y_max_local) y_max_local = y;
+                            hole.push({x: x + x_min, y: y + y_min})
+                        }
+
+                        if (y - 1 >= 0) {
+                            if (!this.isPixelSkin(x + x_min, y - 1 + y_min) && local_visited[y-1][x] == 0) {
+                                var point = [x, y - 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (y + 1 < local_height) {
+                            if (!this.isPixelSkin(x + x_min, y + 1 + y_min) && local_visited[y+1][x] == 0) {
+                                var point = [x, y + 1];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x - 1 >= 0) {
+                            if (!this.isPixelSkin(x - 1 + x_min, y + y_min) && local_visited[y][x-1] == 0) {
+                                var point = [x - 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                        if (x + 1 < local_width) {
+                            if (!this.isPixelSkin(x + 1 + x_min, y + y_min) && local_visited[y][x+1] == 0) {
+                                var point = [x + 1, y];
+                                flood_queue.push(point);
+                            }
+                        }
+                    }
+
+                    if (hole.length >= area_threshold && hole.length > 0) {
+                        holes.push({
+                            member: hole,
+                            top_left: {
+                                x: x_min_local + x_min,
+                                y: y_min_local + y_min
+                            },
+                            bottom_right: {
+                                x: x_max_local + x_min,
+                                y: y_max_local + y_min
+                            },
+                        });
+                    }
+                }
+            }
+
+            // square holes
+            for (var j = 0; j < holes.length; j++) {
+                var y_min_hole = holes[j].top_left.y;
+                var x_min_hole = holes[j].top_left.x;
+                var y_max_hole = holes[j].bottom_right.y;
+                var x_max_hole = holes[j].bottom_right.x;
+
+                for (var i = x_min_hole; i <= x_max_hole; i++) {
+                    this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
+                    this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
+                }
+                for (var i = y_min_hole; i <= y_max_hole; i++) {
+                    this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
+                    this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
+                }
+            }
+        }
 
     }
 
