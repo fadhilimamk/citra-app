@@ -474,7 +474,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    this.setImagePixel(x, y, IG_COLOR_BLACK); // this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
@@ -690,8 +690,8 @@ class ImageGrid {
             var area_threshold_percentage = 0.001;
             var area_threshold = area_threshold_percentage * local_width * local_height;
             var holes = []
-            for (var i = 0; i < local_width; i++) {
-                for (var k = 0; k < local_height; k++) {
+            for (var k = 0; k < local_height; k++) {
+                for (var i = 0; i < local_width; i++) {
                     var flood_queue = [];
                     var point = [i, k];
                     flood_queue.push(point);
@@ -762,11 +762,29 @@ class ImageGrid {
             }
 
             // square holes
+            // eyebrow, eye, mouth
             for (var j = 0; j < holes.length; j++) {
                 var y_min_hole = holes[j].top_left.y;
                 var x_min_hole = holes[j].top_left.x;
                 var y_max_hole = holes[j].bottom_right.y;
                 var x_max_hole = holes[j].bottom_right.x;
+
+                for (var i = x_min_hole; i <= x_max_hole; i++) {
+                    this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
+                    this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
+                }
+                for (var i = y_min_hole; i <= y_max_hole; i++) {
+                    this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
+                    this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
+                }
+            }
+            // nose
+            if (holes.length >= 5) {
+                var y_min_hole = Math.round((holes[2].top_left.y + holes[3].top_left.y + 2*holes[holes.length-1].top_left.y) / 4);
+                var x_min_hole = Math.round((holes[2].top_left.x + holes[3].top_left.x + 2*holes[holes.length-1].top_left.x) / 4);
+                var y_max_hole = Math.round((holes[2].bottom_right.y + holes[3].bottom_right.y + 2*holes[holes.length-1].bottom_right.y) / 4);
+                var x_max_hole = Math.round((holes[2].bottom_right.x + holes[3].bottom_right.x + 2*holes[holes.length-1].bottom_right.x) / 4);
+                console.log(x_min_hole, x_max_hole, y_min_hole, y_max_hole);
 
                 for (var i = x_min_hole; i <= x_max_hole; i++) {
                     this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
