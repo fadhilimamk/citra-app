@@ -13,6 +13,9 @@ class ImageGrid {
         this.data = data;
         this.width = width;
         this.height = height;
+
+        this.otsu_data_maxSum = 0;
+        this.otsu_data_thresholds = [];
     }
 
     // color is array [r,g,b,a]
@@ -460,6 +463,109 @@ class ImageGrid {
         return result;
     } 
 
+    calculateHistogram(x_min, y_min, x_max, y_max) {
+        var histogram = new Array(256);
+        histogram.fill(1);
+
+        for(var i = 0; i < x_max-x_min+1; i++) {
+            for(var j = 0; j < y_max-y_min+1; j++) {
+                var color = this.getImagePixel(x_min + i, y_min + j);
+                var luma = (11 * color[0] + 16 * color[1] + 5 * color[2]) >> 5;
+                histogram[luma]++;
+            }
+        }
+ 
+        return histogram;
+    }
+
+    createLookUpTable(histogram) {
+        // calculate cumulative sum table
+        var P = new Array(histogram.length + 1);
+        var S = new Array(histogram.length + 1);
+        P[0] = 0;
+        S[0] = 0;
+
+        var sumP = 0;
+        var sumS = 0;
+
+        for (var i = 0; i < histogram.length; i++) {
+            sumP += histogram[i];
+            sumS += i * histogram[i];
+            P[i+1] = sumP;
+            S[i+1] = sumS;
+        }
+
+        // calculate the between-class variance for the interval u-v
+        var H = new Array(histogram.length * histogram.length);
+        H.fill(0.);
+
+        for (var u = 0; u < histogram.length; u++)
+            for (var v = u + 1; v < histogram.length; v++) {
+                H[v + u * histogram.length] = Math.pow(S[v] - S[u], 2) / (P[v] - P[u]);
+            }
+                
+
+        return H;
+    }
+
+    getOtsuThreshold(histogram) {
+        this.otsu_data_maxSum = 0;
+        this.otsu_data_thresholds = new Array(1);
+        this.otsu_data_thresholds.fill(0)
+
+        var lookUpTable = this.createLookUpTable(histogram);
+        var index = new Array(3);
+        index[0] = 0;
+        index[2] = histogram.length-1;
+
+        this.otsu_for_loop(lookUpTable, 1, histogram.length - 3, 1, histogram.length, index);
+
+        return this.otsu_data_thresholds[0];
+    }
+
+    otsu_for_loop(H, u, vmax, level, levels, index) {
+        var classes = index.length - 1;
+
+        for (var i = u; i < vmax; i++) {
+            index[level] = i;
+
+            if (level + 1 >= classes) {
+                // Reached the end of the for loop.
+
+                // Calculate the quadratic sum of al intervals.
+                var sum = 0.;
+
+                for (var c = 0; c < classes; c++) {
+                    var u = index[c];
+                    var v = index[c + 1];
+                    var s = H[v + u * levels];
+                    sum += s;
+                }
+
+                if (this.otsu_data_maxSum < sum) {
+                    // Return calculated threshold.
+                    this.otsu_data_thresholds = index.slice(1, index.length - 1);
+                    this.otsu_data_maxSum = sum;
+                }
+            } else
+                // Start a new for loop level, one position after current one.
+                otsu_for_loop(H,
+                        i + 1,
+                        vmax + 1,
+                        level + 1,
+                        levels,
+                        index);
+        }
+    }
+
+    otsuBinarization(x_min, y_min, x_max, y_max) {
+        var histogram = this.calculateHistogram(x_min, y_min, x_max, y_max);
+
+        var threshold = this.getOtsuThreshold(histogram);
+
+        console.log(threshold);
+    }
+
     detectHumanSkin() {
         var map = Array(this.height);
         for (var i = 0; i < this.height; i++) {
@@ -582,6 +688,9 @@ class ImageGrid {
                 this.setImagePixel(x_min, i, IG_COLOR_RED);
                 this.setImagePixel(x_max, i, IG_COLOR_RED);
             }
+
+            // start otsu binarization
+            this.otsuBinarization(x_min, y_min, x_max, y_max);
         }
 
         // detect hole per cluster
