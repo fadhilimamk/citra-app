@@ -195,7 +195,10 @@ class ImageGrid {
         var Cb = color_ycbcr[1];
         var Cr = color_ycbcr[2];
 
-        if ( H > 0.0 && H <=50.0 && S > 0.23 && S <= 0.68 && R > 95 && G > 40 && B > 20 && R > G && R > B && Math.abs(R - G) > 15 && A > 15) {
+        if (H >= 0.0 && H <=50.0 && 
+            S >= 0.23 && S <= 0.68 && 
+            R > 95 && G > 40 && B > 20 && R > G && R > B && 
+            Math.abs(R - G) > 15 && A > 15) {
             isSkin = true;
         }
 
@@ -569,39 +572,17 @@ class ImageGrid {
                 var color = this.getImagePixel(x_min + i, y_min + j);
                 var luma = (11 * color[0] + 16 * color[1] + 5 * color[2]) >> 5;
                 if (luma > threshold) {
-                    this.setImagePixel(x_min+i, y_min+j, IG_COLOR_BLACK);
-                } else {
                     this.setImagePixel(x_min+i, y_min+j, IG_COLOR_WHITE);
+                } else {
+                    this.setImagePixel(x_min+i, y_min+j, IG_COLOR_BLACK);
                 }
             }
         }
     }
 
-    detectHumanSkin() {
-        var map = Array(this.height);
-        for (var i = 0; i < this.height; i++) {
-            map[i] = Array(this.width);
-        }
-        var visited = Array(this.height);
-        for (var i = 0; i < this.height; i++) {
-            visited[i] = Array(this.width);
-        }
-        
-        for (var y = 0; y < this.height; y++) {
-            for (var x = 0; x < this.width; x++) {
-                visited[y][x] = true;
-                if (!this.isPixelSkin(x, y)) {
-                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
-                    map[y][x] = 0;
-                } else {
-                    visited[y][x] = false;
-                    map[y][x] = 1;
-                }
-            }
-        }
-
-        var clusters = [];
+    getFaceCandidateCluster(visited, map) {
         var MIN_PIXEL_PER_CLUSTER = 1500;
+        var clusters = [];
 
         for (var j = 0; j < this.height; j++) {
             for (var i = 0; i < this.width; i++) {
@@ -662,8 +643,6 @@ class ImageGrid {
                     }
                 }
 
-                // console.log(crt_cluster);
-
                 if (crt_cluster.length > MIN_PIXEL_PER_CLUSTER) {
                     clusters.push({
                         member: crt_cluster,
@@ -675,34 +654,19 @@ class ImageGrid {
                             x: x_max_cluster,
                             y: y_max_cluster
                         },
+                        is_face: false
                     });
                 }
             }
         }
 
-        // console.log("clusters");
-        // console.log(clusters);
-    
-        // draw square per cluster
-        // return;
-        for (var j = 0; j < clusters.length; j++) {
-            var y_min = clusters[j].top_left.y;
-            var x_min = clusters[j].top_left.x;
-            var y_max = clusters[j].bottom_right.y;
-            var x_max = clusters[j].bottom_right.x;
+        return clusters;
+    }
 
-            for (var i = x_min; i <= x_max; i++) {
-                this.setImagePixel(i, y_min, IG_COLOR_RED);
-                this.setImagePixel(i, y_max, IG_COLOR_RED);
-            }
-            for (var i = y_min; i <= y_max; i++) {
-                this.setImagePixel(x_min, i, IG_COLOR_RED);
-                this.setImagePixel(x_max, i, IG_COLOR_RED);
-            }
+    detectFaceFromCandidate(clusters) {
 
-            // start otsu binarization
-            // this.otsuBinarization(x_min, y_min, x_max, y_max);
-        }
+        var area_threshold_percentage = 0.001;
+        var face_data = [];
 
         // detect hole per cluster
         for (var j = 0; j < clusters.length; j++) {
@@ -728,6 +692,8 @@ class ImageGrid {
                         var hole_pixel = flood_queue.pop();
                         var x = hole_pixel[0];
                         var y = hole_pixel[1];
+
+                        this.setImagePixel(x+x_min, y+y_min, IG_COLOR_BLUE);
 
                         if (local_visited[y][x] != 0) {
                             continue;
@@ -772,6 +738,8 @@ class ImageGrid {
                         var x = hole_pixel[0];
                         var y = hole_pixel[1];
 
+                        this.setImagePixel(x+x_min, y+y_min, IG_COLOR_BLUE);
+
                         if (local_visited[y][x] != 0) {
                             continue;
                         } else {
@@ -807,7 +775,6 @@ class ImageGrid {
             }
             
             // tag holes
-            var area_threshold_percentage = 0.001;
             var area_threshold = area_threshold_percentage * local_width * local_height;
             var holes = []
             for (var k = 0; k < local_height; k++) {
@@ -881,13 +848,71 @@ class ImageGrid {
                 }
             }
 
+            clusters[j].holes = holes;
+            if (holes.length >= 2) {
+                clusters[j].is_face = true;
+                face_data.push(clusters[j]);
+            }            
+
+        }
+
+        return face_data;
+    }
+
+    detectHumanSkin() {
+        
+        var visited = new Array(this.height);
+        var map = new Array(this.height);
+        for (var i = 0; i < this.height; i++) {
+            visited[i] = new Array(this.width);
+            map[i] = new Array(this.width);
+        }
+        
+        // Detect skin and non skin pixel
+        for (var y = 0; y < this.height; y++) {
+            for (var x = 0; x < this.width; x++) {
+                visited[y][x] = true;
+                if (!this.isPixelSkin(x, y)) {
+                    this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    map[y][x] = 0;
+                } else {
+                    visited[y][x] = false;
+                    map[y][x] = 1;
+                }
+            }
+        }
+
+        // Find cluster (face candidate)
+        var clusters = this.getFaceCandidateCluster(visited, map);
+
+        // Cek minimal tiap cluster harus ada 2 lubang dengan ukuran minimum
+        var face_data = this.detectFaceFromCandidate(clusters);
+        console.log(face_data);
+    
+        // draw square per face
+        for (var j = 0; j < face_data.length; j++) {
+            var y_min = face_data[j].top_left.y;
+            var x_min = face_data[j].top_left.x;
+            var y_max = face_data[j].bottom_right.y;
+            var x_max = face_data[j].bottom_right.x;
+
+            for (var i = x_min; i <= x_max; i++) {
+                this.setImagePixel(i, y_min, IG_COLOR_RED);
+                this.setImagePixel(i, y_max, IG_COLOR_RED);
+            }
+            for (var i = y_min; i <= y_max; i++) {
+                this.setImagePixel(x_min, i, IG_COLOR_RED);
+                this.setImagePixel(x_max, i, IG_COLOR_RED);
+            }
+
             // square holes
+            var holes = face_data[j].holes;
             // eyebrow, eye, mouth
-            for (var j = 0; j < holes.length; j++) {
-                var y_min_hole = holes[j].top_left.y;
-                var x_min_hole = holes[j].top_left.x;
-                var y_max_hole = holes[j].bottom_right.y;
-                var x_max_hole = holes[j].bottom_right.x;
+            for (var k = 0; k < holes.length; k++) {
+                var y_min_hole = holes[k].top_left.y;
+                var x_min_hole = holes[k].top_left.x;
+                var y_max_hole = holes[k].bottom_right.y;
+                var x_max_hole = holes[k].bottom_right.x;
 
                 for (var i = x_min_hole; i <= x_max_hole; i++) {
                     this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
@@ -915,7 +940,12 @@ class ImageGrid {
                     this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
                 }
             }
+
+            // start otsu binarization
+            // this.otsuBinarization(x_min, y_min, x_max, y_max);
         }
+
+        return;
 
     }
 
