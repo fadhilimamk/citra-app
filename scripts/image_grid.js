@@ -562,8 +562,19 @@ class ImageGrid {
         var histogram = this.calculateHistogram(x_min, y_min, x_max, y_max);
 
         var threshold = this.getOtsuThreshold(histogram);
-
         console.log(threshold);
+
+        for(var i = 0; i < x_max-x_min+1; i++) {
+            for(var j = 0; j < y_max-y_min+1; j++) {
+                var color = this.getImagePixel(x_min + i, y_min + j);
+                var luma = (11 * color[0] + 16 * color[1] + 5 * color[2]) >> 5;
+                if (luma > threshold) {
+                    this.setImagePixel(x_min+i, y_min+j, IG_COLOR_BLACK);
+                } else {
+                    this.setImagePixel(x_min+i, y_min+j, IG_COLOR_WHITE);
+                }
+            }
+        }
     }
 
     detectHumanSkin() {
@@ -690,7 +701,7 @@ class ImageGrid {
             }
 
             // start otsu binarization
-            this.otsuBinarization(x_min, y_min, x_max, y_max);
+            // this.otsuBinarization(x_min, y_min, x_max, y_max);
         }
 
         // detect hole per cluster
