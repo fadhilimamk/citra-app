@@ -830,6 +830,18 @@ class ImageGrid {
         return face_data;
     }
 
+    // make non skin pixel become black
+    preprocessBeforeOtsu(x_min, y_min, x_max, y_max) {
+        for(var i = 0; i < x_max-x_min+1; i++) {
+            for(var j = 0; j < y_max-y_min+1; j++) {
+                if (!this.isPixelSkin(x_min+i, y_min+j)) {
+                    this.setImagePixel(x_min+i, y_min+j, IG_COLOR_BLACK);
+                }
+            }
+        }
+    }
+
+
     detectHumanSkin() {
         
         var visited = new Array(this.height);
@@ -844,7 +856,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
@@ -866,6 +878,12 @@ class ImageGrid {
             var x_min = face_data[j].top_left.x;
             var y_max = face_data[j].bottom_right.y;
             var x_max = face_data[j].bottom_right.x;
+
+            // preprocess face area, before otsu
+            this.preprocessBeforeOtsu(x_min, y_min, x_max, y_max);
+
+            // start otsu binarization
+            this.otsuBinarization(x_min, y_min, x_max, y_max);
 
             for (var i = x_min; i <= x_max; i++) {
                 this.setImagePixel(i, y_min, IG_COLOR_RED);
@@ -911,9 +929,6 @@ class ImageGrid {
                     this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
                 }
             }
-
-            // start otsu binarization
-            // this.otsuBinarization(x_min, y_min, x_max, y_max);
         }
 
         return;
