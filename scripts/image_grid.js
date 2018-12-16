@@ -1012,6 +1012,7 @@ class ImageGrid {
         // Cek minimal tiap cluster harus ada 2 lubang dengan ukuran minimum
         var face_data = this.detectFaceFromCandidate(clusters);
         console.log(face_data);
+
     
         // draw square per face
         for (var j = 0; j < face_data.length; j++) {
@@ -1019,6 +1020,10 @@ class ImageGrid {
             var x_min = face_data[j].top_left.x;
             var y_max = face_data[j].bottom_right.y;
             var x_max = face_data[j].bottom_right.x;
+
+
+            var eye_left = { x: 0, y: 0, idx_hole: 0 };
+            var eye_right = { x: 0, y: 0, idx_hole: 0 };
 
             // this.makeGrayscale(x_min, y_min, x_max, y_max);
             
@@ -1055,7 +1060,18 @@ class ImageGrid {
                 var is_eye = this.detectEyeByHistogram(x_min_hole, y_min_hole, x_max_hole, y_max_hole);
                 var local_color = IG_COLOR_GREEN;
 
-                if (is_eye) local_color = IG_COLOR_BLUE;
+                if (is_eye) {
+                    local_color = IG_COLOR_BLUE;
+                    if (eye_left.x == 0) {
+                        eye_left.x = Math.round((x_min_hole + x_max_hole)/2);
+                        eye_left.y = Math.round((y_min_hole + y_max_hole)/2);
+                        eye_left.idx_hole = k;
+                    } else {
+                        eye_right.x = Math.round((x_min_hole + x_max_hole)/2);
+                        eye_right.y = Math.round((y_min_hole + y_max_hole)/2);
+                        eye_right.idx_hole = k;
+                    }
+                }
                 for (var i = x_min_hole; i <= x_max_hole; i++) {
                     this.setImagePixel(i, y_min_hole, local_color);
                     this.setImagePixel(i, y_max_hole, local_color);
@@ -1065,6 +1081,63 @@ class ImageGrid {
                     this.setImagePixel(x_max_hole, i, local_color);
                 }
             }
+
+            if (eye_left.x > eye_right.x) {
+                var x = eye_left.x;
+                var y = eye_left.y;
+                var idx = eye_left.idx_hole;
+                eye_left.x = eye_right.x;
+                eye_left.y = eye_right.y;
+                eye_left.idx_hole = eye_right.idx_hole;
+                eye_right.x = x;
+                eye_right.y = y;
+                eye_right.idx_hole = idx;
+            }
+            
+            // console.log("eye_left");
+            // console.log(eye_left);
+            // console.log("eye_right");
+            // console.log(eye_right);
+
+            // console.log("holes[eye_left.idx_hole]");
+            // console.log(holes[eye_left.idx_hole]);
+            // console.log("holes[eye_right.idx_hole]");
+            // console.log(holes[eye_right.idx_hole]);
+
+            // eye_left.x = holes[eye_left.idx_hole].bottom_right.x;
+            // eye_right.x = holes[eye_right.idx_hole].top_left.x;
+
+            console.log("eye_left");
+            console.log(eye_left);
+            console.log("eye_right");
+            console.log(eye_right);
+
+
+            var diff_eye = eye_right.x - eye_left.x;
+            var x_center = Math.round((eye_right.x + eye_left.x) / 2);
+            var y_center = Math.round((eye_right.y + eye_left.y) / 2);
+
+            var roi_face = {x_min : 0, x_max : 0, y_min : 0, y_max : 0};
+
+            roi_face.x_min = Math.round(x_center - 1.85 * (x_center - eye_left.x));
+            roi_face.x_max = Math.round(x_center + 1.85 * (eye_right.x - x_center));
+            // roi_face.x_min = Math.round(((1.618 * eye_left.x) - x_center) / 0.618);
+            // roi_face.x_max = Math.round(((1.618 * eye_right.x) - x_center) / 0.618);
+            roi_face.y_max = Math.round(y_center + 1.618*diff_eye);
+            roi_face.y_min = Math.round(roi_face.y_max - 1.618*(roi_face.y_max-y_center)); 
+
+            console.log("roi_face");
+            console.log(roi_face);
+
+            for (var i = roi_face.x_min; i <= roi_face.x_max; i++) {
+                this.setImagePixel(i, roi_face.y_min, IG_COLOR_BLACK);
+                this.setImagePixel(i, roi_face.y_max, IG_COLOR_BLACK);
+            }
+            for (var i = roi_face.y_min; i <= roi_face.y_max; i++) {
+                this.setImagePixel(roi_face.x_min, i, IG_COLOR_BLACK);
+                this.setImagePixel(roi_face.x_max, i, IG_COLOR_BLACK);
+            }
+
             // nose
             // if (holes.length >= 5) {
             //     var y_min_hole = Math.round((holes[2].top_left.y + holes[3].top_left.y + 2*holes[holes.length-1].top_left.y) / 4);
@@ -1082,6 +1155,9 @@ class ImageGrid {
             //         this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
             //     }
             // }
+
+
+
         }
 
         return;
