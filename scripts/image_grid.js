@@ -841,6 +841,84 @@ class ImageGrid {
         }
     }
 
+    makeGrayscale(x_min, y_min, x_max, y_max) {
+        for(var i = 0; i < x_max-x_min+1; i++) {
+            for(var j = 0; j < y_max-y_min+1; j++) {
+                var color = this.getImagePixel(x_min+i, y_min+j);
+                var avrg = (color[0] + color[1] + color[2]) / 3;
+                this.setImagePixel(x_min+i, y_min+j, [avrg, avrg, avrg, 255]);
+            }
+        }
+    }
+
+    gaussianFilter(x_min, y_min, x_max, y_max) {
+        
+    }
+
+    // asumsi ukuran matrix sama coy! bentuknya array of array
+    dotProduct(matA, matB) {
+        var total = 0;
+
+        for (var i = 0; i < matA.length; i++) {
+            for (var j = 0; j < matA[0].length; j++) {
+                total += matA[i][j] * matB[i][j];
+            }
+        }
+
+        return total;
+    }
+
+    getGrayscale(x,y) {
+        var color = this.getImagePixel(x, y);
+        var avrg = (color[0] + color[1] + color[2]) / 3;
+
+        return avrg;
+    }
+
+    sobelFilter(x_min, y_min, x_max, y_max) {
+        var filter_vertical = [
+            [-1,0,1],
+            [-2,0,2],
+            [-1,0,1]
+        ];
+        var filter_horizontal = [
+            [-1,-2,-1],
+            [0,0,0],
+            [1,2,1]
+        ];
+
+        var sobel_result = new Array(y_max-y_min+1);
+        for (var i = 0; i < sobel_result.length; i++) {
+            sobel_result[i] = new Array(x_max-x_min+1);
+            sobel_result[i].fill(0);
+        }
+
+        // asumsi skip padding
+        for(var i = 1; i < x_max-x_min; i++) {
+            for(var j = 1; j < y_max-y_min; j++) {
+                this.getGrayscale(x_min+i, y_min+j);
+                var crt_matrix = [
+                    [this.getGrayscale(x_min+i-1, y_min+j-1), this.getGrayscale(x_min+i, y_min+j-1), this.getGrayscale(x_min+i+1, y_min+j-1)],
+                    [this.getGrayscale(x_min+i-1, y_min+j), this.getGrayscale(x_min+i, y_min+j), this.getGrayscale(x_min+i+1, y_min+j)],
+                    [this.getGrayscale(x_min+i-1, y_min+j+1), this.getGrayscale(x_min+i, y_min+j+1), this.getGrayscale(x_min+i+1, y_min+j+1)]
+                ];
+
+                var val_hor = this.dotProduct(crt_matrix, filter_horizontal);
+                var val_ver = this.dotProduct(crt_matrix, filter_vertical);
+                var val = Math.sqrt(val_ver*val_ver + val_hor*val_hor);
+
+                sobel_result[i][j] = Math.round(val/1443*255);
+            }
+        }
+
+        for(var i = 1; i < x_max-x_min; i++) {
+            for(var j = 1; j < y_max-y_min; j++) {
+                var val = sobel_result[i][j];// > 20 ? 255 : 0;
+                this.setImagePixel(x_min+i, y_min+j, [val,val,val,255]);
+            }
+        }
+
+    }
 
     detectHumanSkin() {
         
@@ -856,7 +934,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
@@ -879,11 +957,17 @@ class ImageGrid {
             var y_max = face_data[j].bottom_right.y;
             var x_max = face_data[j].bottom_right.x;
 
+            // this.makeGrayscale(x_min, y_min, x_max, y_max);
+            
+            // edge detection
+            // this.gaussianFilter(x_min, y_min, x_max, y_max);
+            // this.sobelFilter(x_min, y_min, x_max, y_max);
+
             // preprocess face area, before otsu
-            this.preprocessBeforeOtsu(x_min, y_min, x_max, y_max);
+            // this.preprocessBeforeOtsu(x_min, y_min, x_max, y_max);
 
             // start otsu binarization
-            this.otsuBinarization(x_min, y_min, x_max, y_max);
+            // this.otsuBinarization(x_min, y_min, x_max, y_max);
 
             for (var i = x_min; i <= x_max; i++) {
                 this.setImagePixel(i, y_min, IG_COLOR_RED);
@@ -894,6 +978,7 @@ class ImageGrid {
                 this.setImagePixel(x_max, i, IG_COLOR_RED);
             }
 
+            continue;
             // square holes
             var holes = face_data[j].holes;
             // eyebrow, eye, mouth
