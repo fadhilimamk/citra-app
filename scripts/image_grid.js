@@ -644,18 +644,30 @@ class ImageGrid {
                 }
 
                 if (crt_cluster.length > MIN_PIXEL_PER_CLUSTER) {
-                    clusters.push({
-                        member: crt_cluster,
-                        top_left: {
-                            x: x_min_cluster,
-                            y: y_min_cluster
-                        },
-                        bottom_right: {
-                            x: x_max_cluster,
-                            y: y_max_cluster
-                        },
-                        is_face: false
-                    });
+
+                    // cek rasio widthxheight kandidat muka [0.8 - 1.6]
+                    var cluster_width = x_max_cluster-x_min_cluster+1;
+                    var cluster_height = y_max_cluster-y_min_cluster+1;
+                    var cluster_size_ratio = cluster_height/cluster_width;
+
+                    // cek rasio pixel skin
+                    var cluster_area = cluster_height*cluster_width;
+                    var cluster_skin_ratio = crt_cluster.length / cluster_area;
+
+                    if (cluster_size_ratio >= 0.8 && cluster_size_ratio <= 2.0 && cluster_skin_ratio >= 0.4) {
+                        clusters.push({
+                            member: crt_cluster,
+                            top_left: {
+                                x: x_min_cluster,
+                                y: y_min_cluster
+                            },
+                            bottom_right: {
+                                x: x_max_cluster,
+                                y: y_max_cluster
+                            },
+                            is_face: false
+                        });
+                    }
                 }
             }
         }
