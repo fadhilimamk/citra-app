@@ -909,7 +909,6 @@ class ImageGrid {
         // asumsi skip padding
         for(var i = 1; i < x_max-x_min; i++) {
             for(var j = 1; j < y_max-y_min; j++) {
-                this.getGrayscale(x_min+i, y_min+j);
                 var crt_matrix = [
                     [this.getGrayscale(x_min+i-1, y_min+j-1), this.getGrayscale(x_min+i, y_min+j-1), this.getGrayscale(x_min+i+1, y_min+j-1)],
                     [this.getGrayscale(x_min+i-1, y_min+j), this.getGrayscale(x_min+i, y_min+j), this.getGrayscale(x_min+i+1, y_min+j)],
@@ -933,6 +932,57 @@ class ImageGrid {
 
     }
 
+    detectEyeByHistogram(x_min, y_min, x_max, y_max) {
+        var isEye = false;
+        var histogram = new Array(26);
+        var white_counter = 0;
+        var area = (x_max-x_min+1)*(y_max-y_min+1);
+        histogram.fill(0);
+
+        // calculate white percentage
+        for (var i = 0; i < x_max-x_min+1; i++) {
+            for (var j = 0; j < y_max-y_min+1; j++) {
+                var avg = Math.round(this.getGrayscale(x_min+i, y_min+j));
+                avg = Math.round(avg/10);
+                histogram[avg]++;
+
+                if (avg < 5) white_counter++;
+            }
+        }
+
+        console.log(white_counter/area);
+        if (white_counter/area > 0.15) isEye = true;
+
+        return isEye;
+    }
+
+    variance(arr) {
+        var len = 0;
+        var sum=0;
+        for(var i=0;i<arr.length;i++) {
+            if (arr[i] == ""){
+
+            } else {
+                len = len + 1;
+                sum = sum + parseFloat(arr[i]);
+            }
+        }
+        
+        var v = 0;
+        if (len > 1) {
+            var mean = sum / len;
+            for(var i=0;i<arr.length;i++) {
+                if (arr[i] == ""){}
+                else {
+                    v = v + (arr[i] - mean) * (arr[i] - mean);
+                }
+            }
+            return v / len;
+        } else {
+            return 0;
+        }
+    }
+
     detectHumanSkin() {
         
         var visited = new Array(this.height);
@@ -947,7 +997,7 @@ class ImageGrid {
             for (var x = 0; x < this.width; x++) {
                 visited[y][x] = true;
                 if (!this.isPixelSkin(x, y)) {
-                    this.setImagePixel(x, y, IG_COLOR_BLACK);
+                    // this.setImagePixel(x, y, IG_COLOR_BLACK);
                     map[y][x] = 0;
                 } else {
                     visited[y][x] = false;
@@ -991,7 +1041,7 @@ class ImageGrid {
                 this.setImagePixel(x_max, i, IG_COLOR_RED);
             }
 
-            continue;
+            // continue;
             // square holes
             var holes = face_data[j].holes;
             // eyebrow, eye, mouth
@@ -1001,6 +1051,10 @@ class ImageGrid {
                 var y_max_hole = holes[k].bottom_right.y;
                 var x_max_hole = holes[k].bottom_right.x;
 
+                // detect eye using histogram
+                var is_eye = this.detectEyeByHistogram(x_min_hole, y_min_hole, x_max_hole, y_max_hole);
+
+                if (!is_eye) continue;
                 for (var i = x_min_hole; i <= x_max_hole; i++) {
                     this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
                     this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
@@ -1011,22 +1065,22 @@ class ImageGrid {
                 }
             }
             // nose
-            if (holes.length >= 5) {
-                var y_min_hole = Math.round((holes[2].top_left.y + holes[3].top_left.y + 2*holes[holes.length-1].top_left.y) / 4);
-                var x_min_hole = Math.round((holes[2].top_left.x + holes[3].top_left.x + 2*holes[holes.length-1].top_left.x) / 4);
-                var y_max_hole = Math.round((holes[2].bottom_right.y + holes[3].bottom_right.y + 2*holes[holes.length-1].bottom_right.y) / 4);
-                var x_max_hole = Math.round((holes[2].bottom_right.x + holes[3].bottom_right.x + 2*holes[holes.length-1].bottom_right.x) / 4);
-                console.log(x_min_hole, x_max_hole, y_min_hole, y_max_hole);
+            // if (holes.length >= 5) {
+            //     var y_min_hole = Math.round((holes[2].top_left.y + holes[3].top_left.y + 2*holes[holes.length-1].top_left.y) / 4);
+            //     var x_min_hole = Math.round((holes[2].top_left.x + holes[3].top_left.x + 2*holes[holes.length-1].top_left.x) / 4);
+            //     var y_max_hole = Math.round((holes[2].bottom_right.y + holes[3].bottom_right.y + 2*holes[holes.length-1].bottom_right.y) / 4);
+            //     var x_max_hole = Math.round((holes[2].bottom_right.x + holes[3].bottom_right.x + 2*holes[holes.length-1].bottom_right.x) / 4);
+            //     console.log(x_min_hole, x_max_hole, y_min_hole, y_max_hole);
 
-                for (var i = x_min_hole; i <= x_max_hole; i++) {
-                    this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
-                    this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
-                }
-                for (var i = y_min_hole; i <= y_max_hole; i++) {
-                    this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
-                    this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
-                }
-            }
+            //     for (var i = x_min_hole; i <= x_max_hole; i++) {
+            //         this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
+            //         this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
+            //     }
+            //     for (var i = y_min_hole; i <= y_max_hole; i++) {
+            //         this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
+            //         this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
+            //     }
+            // }
         }
 
         return;
