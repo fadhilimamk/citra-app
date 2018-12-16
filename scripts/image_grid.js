@@ -654,7 +654,7 @@ class ImageGrid {
                     var cluster_area = cluster_height*cluster_width;
                     var cluster_skin_ratio = crt_cluster.length / cluster_area;
 
-                    if (cluster_size_ratio >= 0.8 && cluster_size_ratio <= 2.0 && cluster_skin_ratio >= 0.4) {
+                    if (cluster_size_ratio >= 0.8 && cluster_size_ratio <= 2.2 && cluster_skin_ratio >= 0.4) {
                         clusters.push({
                             member: crt_cluster,
                             top_left: {
@@ -665,7 +665,8 @@ class ImageGrid {
                                 x: x_max_cluster,
                                 y: y_max_cluster
                             },
-                            is_face: false
+                            is_face: false,
+                            cluster_skin_ratio: cluster_skin_ratio
                         });
                     }
                 }
