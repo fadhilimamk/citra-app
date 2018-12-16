@@ -951,7 +951,7 @@ class ImageGrid {
         }
 
         console.log(white_counter/area);
-        if (white_counter/area > 0.15) isEye = true;
+        if (white_counter/area > 0.14) isEye = true;
 
         return isEye;
     }
@@ -1053,15 +1053,16 @@ class ImageGrid {
 
                 // detect eye using histogram
                 var is_eye = this.detectEyeByHistogram(x_min_hole, y_min_hole, x_max_hole, y_max_hole);
+                var local_color = IG_COLOR_GREEN;
 
-                if (!is_eye) continue;
+                if (is_eye) local_color = IG_COLOR_BLUE;
                 for (var i = x_min_hole; i <= x_max_hole; i++) {
-                    this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
-                    this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
+                    this.setImagePixel(i, y_min_hole, local_color);
+                    this.setImagePixel(i, y_max_hole, local_color);
                 }
                 for (var i = y_min_hole; i <= y_max_hole; i++) {
-                    this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
-                    this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
+                    this.setImagePixel(x_min_hole, i, local_color);
+                    this.setImagePixel(x_max_hole, i, local_color);
                 }
             }
             // nose
