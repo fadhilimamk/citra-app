@@ -58,7 +58,8 @@
       real_height:null,
       // mode: MODE_PREWITT_FILTER
       // mode: MODE_THINNING_OCR
-      mode: MODE_HIST_EQUAL,
+      // mode: MODE_HIST_EQUAL,
+      mode: MODE_FACE,
         // 0 Histogram Equalization
         // 1 Histogram Specification
 
@@ -329,14 +330,15 @@
           app.real_height = this.height;
           app.real_width = this.width;
 
-          console.log(app.real_width);
-          console.log(app.real_height);
+          // console.log(app.real_width);
+          // console.log(app.real_height);
 
           // prepare canvas and data for processing
           app.imageCanvas.width = this.width;
           app.imageCanvas.height = this.height;
           app.imageCtx = app.imageCanvas.getContext('2d');
-          // console.log(app.imageCtx);
+          // console.log("app.image");
+          // console.log(app.image);
           app.imageCtx.drawImage(app.image, 0, 0, this.width, this.height);
           app.imageData = app.imageCtx.getImageData(0, 0, this.width, this.height).data;
           app.imageGrid = new ImageGrid(app.imageData, app.real_width, app.real_height);

@@ -565,7 +565,7 @@ class ImageGrid {
         var histogram = this.calculateHistogram(x_min, y_min, x_max, y_max);
 
         var threshold = this.getOtsuThreshold(histogram);
-        console.log(threshold);
+        // console.log(threshold);
 
         for(var i = 0; i < x_max-x_min+1; i++) {
             for(var j = 0; j < y_max-y_min+1; j++) {
@@ -950,7 +950,7 @@ class ImageGrid {
             }
         }
 
-        console.log(white_counter/area);
+        // console.log(white_counter/area);
         if (white_counter/area > 0.14) isEye = true;
 
         return isEye;
@@ -1011,7 +1011,7 @@ class ImageGrid {
 
         // Cek minimal tiap cluster harus ada 2 lubang dengan ukuran minimum
         var face_data = this.detectFaceFromCandidate(clusters);
-        console.log(face_data);
+        // console.log(face_data);
 
     
         // draw square per face
@@ -1160,44 +1160,177 @@ class ImageGrid {
                     i++;
                 }   
             }
-            
-            // console.log("height");
-            // console.log(height);
-            // console.log("width");
-            // console.log(width);
-            // console.log("frames");
-            // console.log(frames);
 
             var imageData = new ImageData(frames, width, height);
 
-            
             ctx.putImageData(imageData, 0, 0);
 
             this.resizeCanvas(c, ratio_width, ratio_height);
 
+            ctx = c.getContext("2d");
+            imageData = ctx.getImageData(0, 0, c.width, c.height);
+            
+            // GAUSSIAN BLUR
+            // // console.log(imageData);
+            // var tempData = new Uint8ClampedArray(4 * c.height * c.width);
 
-            // nose
-            // if (holes.length >= 5) {
-            //     var y_min_hole = Math.round((holes[2].top_left.y + holes[3].top_left.y + 2*holes[holes.length-1].top_left.y) / 4);
-            //     var x_min_hole = Math.round((holes[2].top_left.x + holes[3].top_left.x + 2*holes[holes.length-1].top_left.x) / 4);
-            //     var y_max_hole = Math.round((holes[2].bottom_right.y + holes[3].bottom_right.y + 2*holes[holes.length-1].bottom_right.y) / 4);
-            //     var x_max_hole = Math.round((holes[2].bottom_right.x + holes[3].bottom_right.x + 2*holes[holes.length-1].bottom_right.x) / 4);
-            //     console.log(x_min_hole, x_max_hole, y_min_hole, y_max_hole);
-
-            //     for (var i = x_min_hole; i <= x_max_hole; i++) {
-            //         this.setImagePixel(i, y_min_hole, IG_COLOR_GREEN);
-            //         this.setImagePixel(i, y_max_hole, IG_COLOR_GREEN);
-            //     }
-            //     for (var i = y_min_hole; i <= y_max_hole; i++) {
-            //         this.setImagePixel(x_min_hole, i, IG_COLOR_GREEN);
-            //         this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
-            //     }
+            // for (var m = 0; m < tempData.length; m++) {
+            //     tempData[m] = imageData.data[m];
             // }
+
+            // var sigma = 2;
+            // this.gaussian_filter(imageData.data, tempData, c.width, c.height, sigma);
+            // ctx.putImageData(new ImageData(tempData, c.width, c.height), 0, 0);
+
+            // console.log(tempData);
+            var degree = 20;
+            var data = {};
+            var predictors = [];
+            for (var m = 0; m < c.height; m++) {
+                var someData = [];
+                var array = {};
+                for (var n = 0; n < c.width; n++) {
+                    someData.push(new DataPoint(n, imageData.data[4*(m * width + n)]));
+                    // array[n] = imageData.data[4 * (m * width + n)];
+                }
+                data[m] = array; 
+
+                var poly = new PolynomialRegression(someData, degree);
+                var term = poly.getTerms();
+                predictors.push({term:term, poly:poly});
+            }
+
+            var names = ["adrian", "barry", "blaw", "david", "dhands"];
+            var predicted_name = "undefined";
+
+            var i = 0;
+            var min_error = 1000;
+
+            var reference = JSON.parse(localStorage.getItem(names[0]));
+
+            var error = 0;
+            for (var m = 0; m < c.height; m++) {
+                var predictor = predictors[m];
+                for (var n = 0; n < c.width; n++) {
+                    if (reference[m][n] != null)
+                        error += Math.abs(reference[m][n] - predictor.poly.predictY(predictor.term, n));
+                }
+            }
+
+            error = error / (c.width * c.height);
+
+            if (error < min_error) {
+                min_error = error;
+                predicted_name = names[0];
+            }
+
+
+
+            for (i = 1; i < names.length; i++) {
+                var reference = JSON.parse(localStorage.getItem(names[i]));
+    
+                var error = 0;
+                for (var m = 0; m < c.height; m++) {
+                    var predictor = predictors[m];
+                    for (var n = 0; n < c.width; n++) {
+                          if (reference[m][n] != null)
+                            error += Math.abs(reference[m][n] - predictor.poly.predictY(predictor.term, n));
+                    }
+                }
+    
+                error = error / (c.width * c.height);
+
+                if (error < min_error) {
+                    min_error = error;
+                    predicted_name = names[i];
+                }
+            } 
+
+            console.log("Predicted name: ", predicted_name);
+            console.log("Error: ", min_error);
+
+            // localStorage.setItem("dhands", JSON.stringify(data));
+
         }
 
         return;
 
     }
+
+    // if normalize is true, map pixels to range 0..MAX_BRIGHTNESS
+    convolution(input, output, kernel, nx, ny, kn, normalize) {
+        if (kn % 2 != 1) return;
+        if (!(nx > kn && ny > kn)) return;
+        var khalf = kn / 2;
+        var min = Math.FLT_MAX, max = -Math.FLT_MAX;
+        var MAX_BRIGHTNESS = 255;
+
+        if (normalize)
+            for (var m = khalf; m < nx - khalf; m++)
+                for (var n = khalf; n < ny - khalf; n++) {
+                    var pixel = 0.0;
+                    var c = 0;
+                    for (var j = -khalf; j <= khalf; j++)
+                        for (var i = -khalf; i <= khalf; i++) {
+                            pixel += input[4* ((n - j) * nx + m - i)] * kernel[c];
+                            c++;
+                        }
+                    if (pixel < min)
+                        min = pixel;
+                    if (pixel > max)
+                        max = pixel;
+                }
+
+        for (var m = khalf; m < nx - khalf; m++)
+            for (var n = khalf; n < ny - khalf; n++) {
+                var pixel = 0.0;
+                var c = 0;
+                for (var j = -khalf; j <= khalf; j++)
+                    for (var i = -khalf; i <= khalf; i++) {
+                        pixel += input[4 * ((n - j) * nx + m - i)] * kernel[c];
+                        c++;
+                    }
+
+                if (normalize)
+                    pixel = MAX_BRIGHTNESS * (pixel - min) / (max - min);
+                output[4 * (n * nx + m)] = pixel;
+                output[4 * (n * nx + m) + 1] = pixel;
+                output[4 * (n * nx + m) + 2] = pixel;
+                output[4 * (n * nx + m) + 3] = 255;
+            }
+    }
+
+    /*
+    * gaussianFilter:
+    * http://www.songho.ca/dsp/cannyedge/cannyedge.html
+    * determine size of kernel (odd #)
+    * 0.0 <= sigma < 0.5 : 3
+    * 0.5 <= sigma < 1.0 : 5
+    * 1.0 <= sigma < 1.5 : 7
+    * 1.5 <= sigma < 2.0 : 9
+    * 2.0 <= sigma < 2.5 : 11
+    * 2.5 <= sigma < 3.0 : 13 ...
+    * kernelSize = 2 * int(2*sigma) + 3;
+    */
+
+    gaussian_filter(input, output, nx, ny, sigma) {
+        var n = 2 * (2 * sigma) + 3;
+        var mean = Math.floor(n / 2.0);
+        var length_array = n*n;
+        var kernel = []; // variable length array
+        var c = 0;
+        for (var i = 0; i < n; i++)
+            for (var j = 0; j < n; j++) {
+                kernel[c] = Math.exp(-0.5 * (Math.pow((i - mean) / sigma, 2.0) + Math.pow((j - mean) / sigma, 2.0)))/ (2 * Math.PI * sigma * sigma);
+                c++;
+            }
+
+        // console.log("kernel");
+        // console.log(kernel);
+
+        this.convolution(input, output, kernel, nx, ny, n, true);
+    }
+
 
     resizeCanvas(canvas, width_ratio, height_ratio) {
         var tempCanvas = document.createElement("canvas");
