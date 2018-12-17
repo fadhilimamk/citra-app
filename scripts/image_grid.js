@@ -1107,10 +1107,10 @@ class ImageGrid {
             // eye_left.x = holes[eye_left.idx_hole].bottom_right.x;
             // eye_right.x = holes[eye_right.idx_hole].top_left.x;
 
-            console.log("eye_left");
-            console.log(eye_left);
-            console.log("eye_right");
-            console.log(eye_right);
+            // console.log("eye_left");
+            // console.log(eye_left);
+            // console.log("eye_right");
+            // console.log(eye_right);
 
 
             var diff_eye = eye_right.x - eye_left.x;
@@ -1126,8 +1126,8 @@ class ImageGrid {
             roi_face.y_max = Math.round(y_center + 1.618*diff_eye);
             roi_face.y_min = Math.round(roi_face.y_max - 1.618*(roi_face.y_max-y_center)); 
 
-            console.log("roi_face");
-            console.log(roi_face);
+            // console.log("roi_face");
+            // console.log(roi_face);
 
             for (var i = roi_face.x_min; i <= roi_face.x_max; i++) {
                 this.setImagePixel(i, roi_face.y_min, IG_COLOR_BLACK);
@@ -1137,6 +1137,44 @@ class ImageGrid {
                 this.setImagePixel(roi_face.x_min, i, IG_COLOR_BLACK);
                 this.setImagePixel(roi_face.x_max, i, IG_COLOR_BLACK);
             }
+
+            // RESIZE THE SIZE TO 250x300
+            var height = roi_face.y_max - roi_face.y_min;
+            var width = roi_face.x_max - roi_face.x_min;
+            var ratio_width = 255/width;
+            var ratio_height = 300/height;
+            var c = document.getElementById("myCanvas");
+            c.width = width;
+            c.height = height;
+            var ctx = c.getContext("2d");
+
+            var frames = new Uint8ClampedArray(4*height*width);
+            var i = 0;
+            for (var m = roi_face.y_min; m < roi_face.y_max; m++) {
+                for (var n = roi_face.x_min; n < roi_face.x_max; n++) {
+                    var px = this.getImagePixel(n, m);
+                    frames[4*i] = ((px[0]+px[1]+px[2])/3);
+                    frames[4*i+1] = ((px[0]+px[1]+px[2])/3);
+                    frames[4*i+2] = ((px[0]+px[1]+px[2])/3);
+                    frames[4*i+3] = 255;
+                    i++;
+                }   
+            }
+            
+            // console.log("height");
+            // console.log(height);
+            // console.log("width");
+            // console.log(width);
+            // console.log("frames");
+            // console.log(frames);
+
+            var imageData = new ImageData(frames, width, height);
+
+            
+            ctx.putImageData(imageData, 0, 0);
+
+            this.resizeCanvas(c, ratio_width, ratio_height);
+
 
             // nose
             // if (holes.length >= 5) {
@@ -1155,13 +1193,24 @@ class ImageGrid {
             //         this.setImagePixel(x_max_hole, i, IG_COLOR_GREEN);
             //     }
             // }
-
-
-
         }
 
         return;
 
+    }
+
+    resizeCanvas(canvas, width_ratio, height_ratio) {
+        var tempCanvas = document.createElement("canvas");
+        var tctx = tempCanvas.getContext("2d");
+        var cw = canvas.width;
+        var ch = canvas.height;
+        tempCanvas.width = cw;
+        tempCanvas.height = ch;
+        tctx.drawImage(canvas, 0, 0);
+        canvas.width *= width_ratio;
+        canvas.height *= height_ratio;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(tempCanvas, 0, 0, cw, ch, 0, 0, cw * width_ratio, ch * height_ratio);
     }
 
     static convertDataToGrid(data, height, width) {
