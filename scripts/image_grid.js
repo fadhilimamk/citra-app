@@ -1191,7 +1191,7 @@ class ImageGrid {
                 var array = {};
                 for (var n = 0; n < c.width; n++) {
                     someData.push(new DataPoint(n, imageData.data[4*(m * width + n)]));
-                    // array[n] = imageData.data[4 * (m * width + n)];
+                    array[n] = imageData.data[4 * (m * width + n)];
                 }
                 data[m] = array; 
 
@@ -1200,7 +1200,9 @@ class ImageGrid {
                 predictors.push({term:term, poly:poly});
             }
 
-            var names = ["adrian", "barry", "blaw", "david", "dhands"];
+            // localStorage.setItem("hilmi", JSON.stringify(data));
+
+            var names = ["adrian", "barry", "blaw", "david", "dhands", "hilmi"];
             var predicted_name = "undefined";
 
             var i = 0;
@@ -1212,17 +1214,23 @@ class ImageGrid {
             for (var m = 0; m < c.height; m++) {
                 var predictor = predictors[m];
                 for (var n = 0; n < c.width; n++) {
-                    if (reference[m][n] != null)
-                        error += Math.abs(reference[m][n] - predictor.poly.predictY(predictor.term, n));
-                }
+                    var Y = predictor.poly.predictY(predictor.term, n);
+                    if (reference[m][n] != null && Y != null)
+                        error += Math.abs(reference[m][n] - Y);
+                }    
             }
 
             error = error / (c.width * c.height);
+
+            // console.log(c.width);
+            // console.log(c.height);
 
             if (error < min_error) {
                 min_error = error;
                 predicted_name = names[0];
             }
+
+            // console.log("Error " + names[0] + ": " + error);
 
 
 
@@ -1233,10 +1241,14 @@ class ImageGrid {
                 for (var m = 0; m < c.height; m++) {
                     var predictor = predictors[m];
                     for (var n = 0; n < c.width; n++) {
-                          if (reference[m][n] != null)
-                            error += Math.abs(reference[m][n] - predictor.poly.predictY(predictor.term, n));
+                        var Y = predictor.poly.predictY(predictor.term, n);
+                        if (reference[m][n] != null && Y != null)
+                            error += Math.abs(reference[m][n] - Y);
                     }
                 }
+
+                // console.log(c.width);
+                // console.log(c.height);
     
                 error = error / (c.width * c.height);
 
@@ -1244,13 +1256,12 @@ class ImageGrid {
                     min_error = error;
                     predicted_name = names[i];
                 }
+
+                // console.log("Error " + names[i] + ": " + error);
             } 
 
             console.log("Predicted name: ", predicted_name);
             console.log("Error: ", min_error);
-
-            // localStorage.setItem("dhands", JSON.stringify(data));
-
         }
 
         return;
